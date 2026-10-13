@@ -1,0 +1,15 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Commencely — Job search</title><link rel="stylesheet" href="/style.css"></head>
+<body><main>
+<h1>Commencely</h1><p>Search jobs in Northwest Arkansas.</p>
+<form id="search">
+<label for="keywords">Job title or keyword</label><input id="keywords" name="keywords" value="marketing" maxlength="120">
+<label for="location">Location</label><input id="location" name="location" value="Fayetteville, Arkansas" required maxlength="120">
+<button type="submit">Search jobs</button>
+</form>
+<p id="status" role="status" aria-live="polite">Enter a search to load jobs.</p>
+<section id="results" aria-label="Job results"></section>
+<p>Jobs by <a href="https://www.adzuna.com" target="_blank" rel="noopener noreferrer">Adzuna</a></p>
+<p class="note">Descriptions are snippets. Read the full posting for qualifications and experience requirements. Results do not indicate qualification fit.</p>
+</main><script type="module" src="/client.js"></script></body></html>
