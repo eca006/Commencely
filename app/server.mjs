@@ -2,7 +2,7 @@ import http from 'node:http';
 import { readFile } from 'node:fs/promises';
 import { normalizeJobs } from './jobs.mjs';
 
-const files = { '/': ['index.html', 'text/html'], '/client.js': ['client.js', 'text/javascript'], '/style.css': ['style.css', 'text/css'] };
+const files = { '/': ['index.html', 'text/html'], '/client.js': ['client.js', 'text/javascript'], '/careers.js': ['careers.js', 'text/javascript'], '/style.css': ['style.css', 'text/css'] };
 const json = (res, status, data) => {
   res.writeHead(status, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
   res.end(JSON.stringify(data));
@@ -20,7 +20,7 @@ http.createServer(async (req, res) => {
       const endpoint = new URL('https://api.adzuna.com/v1/api/jobs/us/search/1');
       endpoint.search = new URLSearchParams({ app_id: id, app_key: key, where: location, what: keywords, results_per_page: '10', 'content-type': 'application/json' });
       const upstream = await fetch(endpoint, { signal: AbortSignal.timeout(15000), headers: { Accept: 'application/json' } });
-      if (!upstream.ok) return json(res, 502, { error: `Adzuna returned status ${upstream.status}. Check your credentials or try again later.` });
+      if (!upstream.ok) return json(res, 502, { error: [401, 403].includes(upstream.status) ? 'Adzuna could not authorize this search. Check your server credentials and account access.' : `Adzuna returned status ${upstream.status}. Please try again later.` });
       return json(res, 200, normalizeJobs(await upstream.json()));
     }
     const file = files[url.pathname];

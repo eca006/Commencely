@@ -3,6 +3,24 @@
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Commencely — Job search</title><link rel="stylesheet" href="/style.css"></head>
 <body><main>
 <h1>Commencely</h1><p>Search jobs in Northwest Arkansas.</p>
+<section aria-labelledby="questionnaire-title">
+<h2 id="questionnaire-title">Explore career directions</h2>
+<p>Choose what sounds interesting to you. These suggestions reflect interests, not whether you meet a job’s qualifications.</p>
+<form id="questionnaire">
+<label for="interest">Which activity interests you most?</label>
+<select id="interest" name="interest" required><option value="">Choose an activity</option><option value="marketing">Creating content and promoting ideas</option><option value="sales">Talking with customers and building relationships</option><option value="operations">Organizing projects and improving processes</option></select>
+<label for="strength">Which skill would you most like to use?</label>
+<select id="strength" name="strength" required><option value="">Choose a skill</option><option value="marketing">Writing and creative communication</option><option value="sales">Listening and explaining solutions</option><option value="operations">Planning and working with details</option></select>
+<label for="task">Which task would you choose to learn?</label>
+<select id="task" name="task" required><option value="">Choose a task</option><option value="marketing">Plan a campaign and review its results</option><option value="sales">Help a customer choose a product or service</option><option value="operations">Coordinate a team’s schedule and tasks</option></select>
+<button type="submit">Show my career directions</button>
+</form>
+<p id="profile-status" role="status"></p>
+<button id="clear-profile" type="button">Clear saved answers</button>
+<p class="note">Answers are saved in this browser on this computer. This is a simple starting questionnaire, not a validated career assessment.</p>
+<div id="directions" aria-live="polite"></div>
+</section>
+<h2 id="job-search-title">Search jobs</h2>
 <form id="search">
 <label for="keywords">Job title or keyword</label><input id="keywords" name="keywords" value="marketing" maxlength="120">
 <label for="location">Location</label><input id="location" name="location" value="Fayetteville, Arkansas" required maxlength="120">

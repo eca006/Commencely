@@ -1,3 +1,44 @@
+import { recommend, validAnswers } from './careers.js';
+const questionnaire = document.querySelector('#questionnaire');
+const directions = document.querySelector('#directions');
+const profileStatus = document.querySelector('#profile-status');
+const storageKey = 'commencely-profile-v1';
+function showDirections(answers) {
+  directions.replaceChildren();
+  for (const career of recommend(answers)) {
+    const article = document.createElement('article');
+    for (const [tag, text] of [['h3', career.title], ['p', career.description], ['p', `${career.score} of 3 answers point toward this direction. ${career.explanation}`]]) {
+      const element = document.createElement(tag); element.textContent = text; article.append(element);
+    }
+    const button = document.createElement('button');
+    button.type = 'button'; button.textContent = 'Find jobs in this direction';
+    button.addEventListener('click', () => {
+      document.querySelector('#keywords').value = career.keyword;
+      form.requestSubmit();
+      document.querySelector('#job-search-title').scrollIntoView({ behavior: 'smooth' });
+    });
+    article.append(button); directions.append(article);
+  }
+}
+questionnaire.addEventListener('submit', event => {
+  event.preventDefault();
+  const answers = Object.fromEntries(new FormData(questionnaire));
+  showDirections(answers);
+  try { localStorage.setItem(storageKey, JSON.stringify(answers)); profileStatus.textContent = 'Answers saved in this browser. Ties share the same score; their order does not indicate a stronger fit.'; }
+  catch { profileStatus.textContent = 'Directions ready. This browser could not save your answers.'; }
+});
+document.querySelector('#clear-profile').addEventListener('click', () => {
+  try { localStorage.removeItem(storageKey); profileStatus.textContent = 'Saved answers cleared.'; }
+  catch { profileStatus.textContent = 'Could not clear browser storage. Use your browser settings to remove saved answers.'; }
+  questionnaire.reset(); directions.replaceChildren();
+});
+try {
+  const answers = JSON.parse(localStorage.getItem(storageKey));
+  if (validAnswers(answers)) {
+    for (const field of ['interest', 'strength', 'task']) questionnaire.elements[field].value = answers[field];
+    showDirections(answers); profileStatus.textContent = 'Loaded your saved answers. Ties share the same score; their order does not indicate a stronger fit.';
+  }
+} catch {}
 const form = document.querySelector('#search');
 const status = document.querySelector('#status');
 const results = document.querySelector('#results');

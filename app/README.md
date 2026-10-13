@@ -11,4 +11,6 @@ Credentials stay on the server. `.env` is ignored by Git. Do not put credentials
 
 Run `npm test` to check response handling. To verify live integration, search marketing in Fayetteville, Arkansas, and compare three View job links with their returned company/location. Record the date and outcomes without credentials.
 
-This version supports a single page of up to ten results, loading/error/empty states, and listing links. Questionnaire, profiles, matching, resumes, budget, and tracking are later steps. Salary fields are excluded. Confirm current Adzuna display requirements before publishing.
+This version includes a three-question interest questionnaire, three explained career directions, browser-local saved answers with a clear control, and job searches for each direction. Each answer contributes one point to the corresponding direction; equal scores are ties. These are exploratory interest suggestions, not qualification assessments or a validated career test.
+
+Job search supports a single page of up to ten results, loading/error/empty states, and listing links. Qualification matching, resumes, budget, and tracking are later steps. Salary fields are excluded. Confirm current Adzuna display requirements before publishing.
