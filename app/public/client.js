@@ -67,6 +67,24 @@ form.addEventListener('submit', async event => {
         element.textContent = text;
         card.append(element);
       }
+      const qualification = document.createElement('section');
+      const heading = document.createElement('h3'); heading.textContent = 'Experience and qualifications'; qualification.append(heading);
+      const notice = document.createElement('p'); notice.textContent = job.qualifications.notice; qualification.append(notice);
+      if (job.qualifications.experienceFlag) {
+        const flag = document.createElement('p');
+        flag.textContent = 'Review entry-level wording: this snippet mentions entry-level and prior years of experience. Read the evidence below; experience may be preferred, required, or an alternative.';
+        qualification.append(flag);
+      }
+      if (!job.qualifications.experience.length) {
+        const unknown = document.createElement('p'); unknown.textContent = 'Experience: unknown — no experience cue found in this snippet.'; qualification.append(unknown);
+      }
+      for (const item of job.qualifications.experience) {
+        const label = document.createElement('p');
+        label.textContent = ({required: 'Required wording detected', preferred: 'Preferred wording detected', unclear: 'Unclear — review wording'})[item.status];
+        const quote = document.createElement('blockquote'); quote.textContent = item.evidence;
+        qualification.append(label, quote);
+      }
+      card.append(qualification);
       if (job.link) {
         const link = document.createElement('a');
         link.href = job.link; link.target = '_blank'; link.rel = 'noopener noreferrer'; link.textContent = 'View job';
