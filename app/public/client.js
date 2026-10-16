@@ -68,16 +68,25 @@ form.addEventListener('submit', async event => {
   results.replaceChildren();
   try { localStorage.setItem('commencely-search-v1', JSON.stringify(Object.fromEntries(new FormData(form)))); } catch {}
   try {
-    const response = await fetch('/api/jobs?' + new URLSearchParams(new FormData(form)));
-    const data = await response.json();
-    if (!response.ok) throw new Error(data.error || 'Unable to load jobs.');
+    const params = new URLSearchParams(new FormData(form));
+    const load = async endpoint => {
+      const response = await fetch(endpoint + '?' + params);
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Unable to load jobs.');
+      return data;
+    };
+    const [adzuna, employer] = await Promise.allSettled([load('/api/jobs'),load('/api/employer-jobs')]);
+    if (adzuna.status === 'rejected' && employer.status === 'rejected') throw new Error('Both job sources are unavailable. Please try again.');
+    const data = adzuna.status === 'fulfilled' ? adzuna.value : {jobs:[],count:0};
+    const employerJobs = employer.status === 'fulfilled' ? employer.value.jobs : [];
     status.textContent = data.reviewed !== undefined
       ? `Showing ${data.jobs.length} of ${data.relevant} listings retained from ${data.reviewed} reviewed results. ${data.removed} excluded by title relevance checks. This checks career-topic relevance, not qualifications or entry-level status. Editing the keyword switches to a general search; changing location keeps your career direction.`
       : data.jobs.length ? `Showing ${data.jobs.length} of ${data.count} matching jobs. General keyword search; career relevance is not checked.` : 'No jobs found. Try a broader keyword or another nearby city.';
     if (data.reviewed !== undefined && !data.jobs.length) status.textContent += ' No suitable titles were found in this sample. Try another nearby city; this does not mean no suitable jobs exist.';
-    for (const job of data.jobs) {
+    status.textContent = `${employerJobs.length} full-description employer listings shown first. ` + (adzuna.status === 'fulfilled' ? 'Adzuna: ' + status.textContent : 'Adzuna is currently unavailable.') + ' ' + (employer.status === 'fulfilled' ? employer.value.coverage : 'Employer feed is currently unavailable.');
+    for (const job of [...employerJobs,...data.jobs]) {
       const card = document.createElement('article');
-      for (const [tag, text] of [['h2', job.title], ['p', `${job.company} · ${job.location}`], ['p', job.description]]) {
+      for (const [tag, text] of [['h2', job.title], ['p', `${job.company} · ${job.location}`], ['p', job.descriptionKind === 'full' ? `Full employer description · ${job.source} · Retrieved ${new Date(job.fetchedAt).toLocaleString()}` : 'Adzuna · Partial description']]) {
         const element = document.createElement(tag);
         element.textContent = text;
         card.append(element);
@@ -87,23 +96,29 @@ form.addEventListener('submit', async event => {
       const notice = document.createElement('p'); notice.textContent = job.qualifications.notice; qualification.append(notice);
       if (job.qualifications.experienceFlag) {
         const flag = document.createElement('p');
-        flag.textContent = 'Review entry-level wording: this snippet mentions entry-level and prior years of experience. Read the evidence below; experience may be preferred, required, or an alternative.';
+        flag.textContent = 'Review entry-level wording: this description mentions entry-level and prior years of experience. Read the evidence below; experience may be preferred, required, or an alternative.';
         qualification.append(flag);
       }
       if (!job.qualifications.experience.length) {
-        const unknown = document.createElement('p'); unknown.textContent = 'Experience requirements not confirmed. The available snippet does not establish prior experience requirements. This does not mean no experience is needed. Use “View job” to check the full posting.'; qualification.append(unknown);
+        const unknown = document.createElement('p'); unknown.textContent = job.descriptionKind === 'full' ? 'Prior experience not confirmed: no explicit experience cue was identified in the supplied employer description. This does not establish that experience is unnecessary.' : 'Experience requirements not confirmed. The available snippet does not establish prior experience requirements. This does not mean no experience is needed. Use “View job” to check the full posting.'; qualification.append(unknown);
       }
       for (const item of job.qualifications.experience) {
         const label = document.createElement('p');
-        label.textContent = ({required: 'Required wording detected', preferred: 'Preferred wording detected', unclear: 'Unclear — review wording'})[item.status];
+        label.textContent = (item.years ? `Prior experience: ${item.years} · ` : '') + ({required: 'Required wording detected', preferred: 'Preferred wording detected', listed:'Listed experience — not explicitly labeled required or preferred', unclear: 'Unclear — review wording and alternatives'})[item.status];
         const quote = document.createElement('blockquote'); quote.textContent = item.evidence;
         qualification.append(label, quote);
       }
       card.append(qualification);
+      const description = document.createElement('details');
+      const summary = document.createElement('summary'); summary.textContent = job.descriptionKind === 'full' ? 'Read full employer description here' : 'Read available description snippet';
+      const body = document.createElement('p'); body.textContent = job.description; body.style.whiteSpace = 'pre-line'; description.append(summary, body); card.append(description);
       if (job.link) {
         const link = document.createElement('a');
         link.href = job.link; link.target = '_blank'; link.rel = 'noopener noreferrer'; link.textContent = 'View job';
         card.append(link);
+      }
+      if (job.descriptionKind !== 'full') {
+        const attribution=document.createElement('a'); attribution.href='https://www.adzuna.com'; attribution.textContent='Adzuna'; attribution.style.cssText='display:block;min-width:116px;min-height:23px;font-size:23px'; card.append(attribution);
       }
       results.append(card);
     }

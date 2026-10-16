@@ -2,6 +2,7 @@ import http from 'node:http';
 import { readFile } from 'node:fs/promises';
 import { normalizeJobs } from './jobs.mjs';
 import { directionSearch, filterDirection } from './search.mjs';
+import { getEmployerJobs } from './employer-jobs.mjs';
 
 const files = { '/': ['index.html', 'text/html'], '/client.js': ['client.js', 'text/javascript'], '/careers.js': ['careers.js', 'text/javascript'], '/style.css': ['style.css', 'text/css'] };
 const json = (res, status, data) => {
@@ -12,6 +13,12 @@ http.createServer(async (req, res) => {
   try {
     const url = new URL(req.url, 'http://localhost');
     if (req.method !== 'GET') return json(res, 405, { error: 'Method not allowed.' });
+    if (url.pathname === '/api/employer-jobs') {
+      const query=Object.fromEntries(['direction','keywords','location'].map(key=>[key,url.searchParams.get(key)||'']));
+      if (query.direction && !directionSearch(query.direction) || Object.values(query).some(value=>value.length>120)) return json(res,400,{error:'Invalid search.'});
+      try { return json(res,200,await getEmployerJobs(query)); }
+      catch { return json(res,502,{error:'Employer feed unavailable. Adzuna results may still be available.'}); }
+    }
     if (url.pathname === '/api/jobs') {
       const id = process.env.ADZUNA_APP_ID, key = process.env.ADZUNA_APP_KEY;
       if (!id || !key) return json(res, 503, { error: 'Add your Adzuna app ID and key to app/.env, then restart the app.' });
