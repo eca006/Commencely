@@ -1,4 +1,4 @@
-import { recommend, validAnswers } from './careers.js';
+import { careers, recommend, validAnswers } from './careers.js';
 const questionnaire = document.querySelector('#questionnaire');
 const directions = document.querySelector('#directions');
 const profileStatus = document.querySelector('#profile-status');
@@ -25,39 +25,54 @@ questionnaire.addEventListener('submit', event => {
   event.preventDefault();
   const answers = Object.fromEntries(new FormData(questionnaire));
   showDirections(answers);
-  try { localStorage.setItem(storageKey, JSON.stringify(answers)); profileStatus.textContent = 'Answers saved in this browser. Ties share the same score; their order does not indicate a stronger fit.'; }
+  document.querySelector('#questionnaire-panel').open = false;
+  try { localStorage.setItem(storageKey, JSON.stringify(answers)); profileStatus.textContent = 'Career answers saved. Search again or switch directions below—no need to answer again. Equal scores are ties.'; }
   catch { profileStatus.textContent = 'Directions ready. This browser could not save your answers.'; }
 });
 document.querySelector('#clear-profile').addEventListener('click', () => {
   try { localStorage.removeItem(storageKey); profileStatus.textContent = 'Saved answers cleared.'; }
   catch { profileStatus.textContent = 'Could not clear browser storage. Use your browser settings to remove saved answers.'; }
   questionnaire.reset(); directions.replaceChildren();
+  document.querySelector('#questionnaire-panel').open = true;
 });
 try {
   const answers = JSON.parse(localStorage.getItem(storageKey));
   if (validAnswers(answers)) {
     for (const field of ['interest', 'strength', 'task']) questionnaire.elements[field].value = answers[field];
-    showDirections(answers); profileStatus.textContent = 'Loaded your saved answers. Ties share the same score; their order does not indicate a stronger fit.';
+    showDirections(answers); profileStatus.textContent = 'Career answers loaded. Search again or switch directions below—no need to answer again. Equal scores are ties.';
+    document.querySelector('#questionnaire-panel').open = false;
   }
 } catch {}
 const form = document.querySelector('#search');
 const status = document.querySelector('#status');
 const results = document.querySelector('#results');
-for (const input of [document.querySelector('#keywords'), document.querySelector('#location')]) {
-  input.addEventListener('input', () => { document.querySelector('#direction').value = ''; });
-}
+const directionSelect = document.querySelector('#direction');
+directionSelect.addEventListener('change', () => {
+  const career = careers.find(item => item.id === directionSelect.value);
+  if (career) document.querySelector('#keywords').value = career.keyword;
+});
+document.querySelector('#keywords').addEventListener('input', () => { directionSelect.value = ''; });
+try {
+  const saved = JSON.parse(localStorage.getItem('commencely-search-v1'));
+  if (saved && typeof saved.keywords === 'string' && typeof saved.location === 'string') {
+    document.querySelector('#keywords').value = saved.keywords;
+    document.querySelector('#location').value = saved.location;
+    directionSelect.value = careers.some(item => item.id === saved.direction) ? saved.direction : '';
+  }
+} catch {}
 form.addEventListener('submit', async event => {
   event.preventDefault();
   const button = form.querySelector('button');
   button.disabled = true;
   status.textContent = 'Loading jobs…';
   results.replaceChildren();
+  try { localStorage.setItem('commencely-search-v1', JSON.stringify(Object.fromEntries(new FormData(form)))); } catch {}
   try {
     const response = await fetch('/api/jobs?' + new URLSearchParams(new FormData(form)));
     const data = await response.json();
     if (!response.ok) throw new Error(data.error || 'Unable to load jobs.');
     status.textContent = data.reviewed !== undefined
-      ? `Showing ${data.jobs.length} of ${data.relevant} listings retained from ${data.reviewed} reviewed results. ${data.removed} excluded by title relevance checks. This checks career-topic relevance, not qualifications or entry-level status. Editing the search fields switches to a general keyword search.`
+      ? `Showing ${data.jobs.length} of ${data.relevant} listings retained from ${data.reviewed} reviewed results. ${data.removed} excluded by title relevance checks. This checks career-topic relevance, not qualifications or entry-level status. Editing the keyword switches to a general search; changing location keeps your career direction.`
       : data.jobs.length ? `Showing ${data.jobs.length} of ${data.count} matching jobs. General keyword search; career relevance is not checked.` : 'No jobs found. Try a broader keyword or another nearby city.';
     if (data.reviewed !== undefined && !data.jobs.length) status.textContent += ' No suitable titles were found in this sample. Try another nearby city; this does not mean no suitable jobs exist.';
     for (const job of data.jobs) {
@@ -76,7 +91,7 @@ form.addEventListener('submit', async event => {
         qualification.append(flag);
       }
       if (!job.qualifications.experience.length) {
-        const unknown = document.createElement('p'); unknown.textContent = 'Experience: unknown — no experience cue found in this snippet.'; qualification.append(unknown);
+        const unknown = document.createElement('p'); unknown.textContent = 'Experience requirements not confirmed. The available snippet does not establish prior experience requirements. This does not mean no experience is needed. Use “View job” to check the full posting.'; qualification.append(unknown);
       }
       for (const item of job.qualifications.experience) {
         const label = document.createElement('p');

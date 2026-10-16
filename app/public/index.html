@@ -6,6 +6,8 @@
 <section aria-labelledby="questionnaire-title">
 <h2 id="questionnaire-title">Explore career directions</h2>
 <p>Choose what sounds interesting to you. These suggestions reflect interests, not whether you meet a job’s qualifications.</p>
+<p>Answer once to explore directions. You can search again or switch directions below without repeating these questions.</p>
+<details id="questionnaire-panel" open><summary>Edit career answers</summary>
 <form id="questionnaire">
 <label for="interest">Which activity interests you most?</label>
 <select id="interest" name="interest" required><option value="">Choose an activity</option><option value="marketing">Creating content and promoting ideas</option><option value="sales">Talking with customers and building relationships</option><option value="operations">Organizing projects and improving processes</option></select>
@@ -15,6 +17,7 @@
 <select id="task" name="task" required><option value="">Choose a task</option><option value="marketing">Plan a campaign and review its results</option><option value="sales">Help a customer choose a product or service</option><option value="operations">Coordinate a team’s schedule and tasks</option></select>
 <button type="submit">Show my career directions</button>
 </form>
+</details>
 <p id="profile-status" role="status"></p>
 <button id="clear-profile" type="button">Clear saved answers</button>
 <p class="note">Answers are saved in this browser on this computer. This is a simple starting questionnaire, not a validated career assessment.</p>
@@ -22,7 +25,9 @@
 </section>
 <h2 id="job-search-title">Search jobs</h2>
 <form id="search">
-<input type="hidden" name="direction" id="direction" value="">
+<p>Search as often as you like. Your career answers stay saved in this browser.</p>
+<label for="direction">Career direction</label>
+<select id="direction" name="direction"><option value="">General keyword search</option><option value="marketing">Marketing and communications</option><option value="sales">Sales and customer relationships</option><option value="operations">Business operations and coordination</option></select>
 <label for="keywords">Job title or keyword</label><input id="keywords" name="keywords" value="marketing" maxlength="120">
 <label for="location">Location</label><input id="location" name="location" value="Fayetteville, Arkansas" required maxlength="120">
 <button type="submit">Search jobs</button>
