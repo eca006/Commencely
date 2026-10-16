@@ -14,3 +14,5 @@ Run `npm test` to check response handling. To verify live integration, search ma
 This version includes a three-question interest questionnaire, three explained career directions, browser-local saved answers with a clear control, and job searches for each direction. Each answer contributes one point to the corresponding direction; equal scores are ties. These are exploratory interest suggestions, not qualification assessments or a validated career test.
 
 Job search supports a single page of up to ten results, loading/error/empty states, and listing links. Qualification matching, resumes, budget, and tracking are later steps. Salary fields are excluded. Confirm current Adzuna display requirements before publishing.
+
+Career-direction searches review up to 50 listings and apply basic title relevance and clinical-role exclusions before displaying up to ten. Counts refer to this sample. Title filtering does not establish qualifications or entry-level suitability. Editing keyword/location fields returns to a general search. Run `node --env-file=.env check-live.mjs` for a credential-safe live search check.

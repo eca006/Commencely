@@ -1,6 +1,7 @@
 import http from 'node:http';
 import { readFile } from 'node:fs/promises';
 import { normalizeJobs } from './jobs.mjs';
+import { directionSearch, filterDirection } from './search.mjs';
 
 const files = { '/': ['index.html', 'text/html'], '/client.js': ['client.js', 'text/javascript'], '/careers.js': ['careers.js', 'text/javascript'], '/style.css': ['style.css', 'text/css'] };
 const json = (res, status, data) => {
@@ -16,12 +17,18 @@ http.createServer(async (req, res) => {
       if (!id || !key) return json(res, 503, { error: 'Add your Adzuna app ID and key to app/.env, then restart the app.' });
       const location = url.searchParams.get('location') || 'Fayetteville, Arkansas';
       const keywords = url.searchParams.get('keywords') || '';
+      const direction = url.searchParams.get('direction');
+      if (direction && !directionSearch(direction)) return json(res, 400, { error: 'Choose a valid career direction.' });
       if (location.length > 120 || keywords.length > 120) return json(res, 400, { error: 'Keep search fields under 120 characters.' });
       const endpoint = new URL('https://api.adzuna.com/v1/api/jobs/us/search/1');
-      endpoint.search = new URLSearchParams({ app_id: id, app_key: key, where: location, what: keywords, results_per_page: '10', 'content-type': 'application/json' });
+      endpoint.search = new URLSearchParams({ app_id: id, app_key: key, where: location, what: direction ? directionSearch(direction) : keywords, results_per_page: direction ? '50' : '10', 'content-type': 'application/json' });
       const upstream = await fetch(endpoint, { signal: AbortSignal.timeout(15000), headers: { Accept: 'application/json' } });
       if (!upstream.ok) return json(res, 502, { error: [401, 403].includes(upstream.status) ? 'Adzuna could not authorize this search. Check your server credentials and account access.' : `Adzuna returned status ${upstream.status}. Please try again later.` });
-      return json(res, 200, normalizeJobs(await upstream.json()));
+      const raw = await upstream.json();
+      if (!direction) return json(res, 200, normalizeJobs(raw));
+      const filtered = filterDirection(raw, direction);
+      const normalized = normalizeJobs(filtered);
+      return json(res, 200, { ...normalized, jobs: normalized.jobs.slice(0, 10), reviewed: filtered.reviewed, removed: filtered.removed, relevant: normalized.jobs.length });
     }
     const file = files[url.pathname];
     if (!file) return json(res, 404, { error: 'Page not found.' });

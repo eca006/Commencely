@@ -14,6 +14,7 @@ function showDirections(answers) {
     button.type = 'button'; button.textContent = 'Find jobs in this direction';
     button.addEventListener('click', () => {
       document.querySelector('#keywords').value = career.keyword;
+      document.querySelector('#direction').value = career.id;
       form.requestSubmit();
       document.querySelector('#job-search-title').scrollIntoView({ behavior: 'smooth' });
     });
@@ -42,6 +43,9 @@ try {
 const form = document.querySelector('#search');
 const status = document.querySelector('#status');
 const results = document.querySelector('#results');
+for (const input of [document.querySelector('#keywords'), document.querySelector('#location')]) {
+  input.addEventListener('input', () => { document.querySelector('#direction').value = ''; });
+}
 form.addEventListener('submit', async event => {
   event.preventDefault();
   const button = form.querySelector('button');
@@ -52,7 +56,10 @@ form.addEventListener('submit', async event => {
     const response = await fetch('/api/jobs?' + new URLSearchParams(new FormData(form)));
     const data = await response.json();
     if (!response.ok) throw new Error(data.error || 'Unable to load jobs.');
-    status.textContent = data.jobs.length ? `Showing ${data.jobs.length} of ${data.count} matching jobs.` : 'No jobs found. Try a broader keyword or another nearby city.';
+    status.textContent = data.reviewed !== undefined
+      ? `Showing ${data.jobs.length} of ${data.relevant} listings retained from ${data.reviewed} reviewed results. ${data.removed} excluded by title relevance checks. This checks career-topic relevance, not qualifications or entry-level status. Editing the search fields switches to a general keyword search.`
+      : data.jobs.length ? `Showing ${data.jobs.length} of ${data.count} matching jobs. General keyword search; career relevance is not checked.` : 'No jobs found. Try a broader keyword or another nearby city.';
+    if (data.reviewed !== undefined && !data.jobs.length) status.textContent += ' No suitable titles were found in this sample. Try another nearby city; this does not mean no suitable jobs exist.';
     for (const job of data.jobs) {
       const card = document.createElement('article');
       for (const [tag, text] of [['h2', job.title], ['p', `${job.company} · ${job.location}`], ['p', job.description]]) {
