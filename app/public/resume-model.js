@@ -14,18 +14,18 @@ export function validateResumeFile(file) {
 const escape = value => value.replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
 // Shared by the on-screen preview and the formatted download.
 export const resumeStyles = `
-.resume-document{box-sizing:border-box;background:#fff;color:#20252b;font:14px/1.55 Arial,sans-serif;padding:42px 46px;border:1px solid #d9dde3;max-width:794px;margin:24px auto;overflow-wrap:anywhere;box-shadow:0 3px 14px #15233b0d}
-.resume-document .resume-header{border-bottom:2px solid #283d54;padding-bottom:16px;margin-bottom:22px}
-.resume-document h1{font-size:28px;line-height:1.2;letter-spacing:.015em;margin:0 0 9px}
-.resume-document .resume-contact{font-size:12px;color:#4a5563;margin:3px 0}
-.resume-document h2{font-size:12px;text-transform:uppercase;letter-spacing:.1em;color:#283d54;border-bottom:1px solid #d9dde3;padding-bottom:6px;margin:25px 0 12px;break-after:avoid}
-.resume-document p{margin:7px 0;white-space:pre-wrap}
-.resume-document .resume-entry{font-weight:600;margin-top:14px;break-after:avoid}
-.resume-document ul{padding-left:19px;margin:7px 0 14px}
-.resume-document li{padding-left:3px;margin:5px 0;white-space:pre-wrap}
+.resume-document{box-sizing:border-box;background:#fff;color:#111;font:15px/1.35 Georgia,"Times New Roman",serif;padding:40px 46px;border:1px solid #ddd;max-width:794px;margin:24px auto;overflow-wrap:anywhere;box-shadow:none}
+.resume-document .resume-header{text-align:center;border-bottom:1px solid #111;padding-bottom:12px;margin-bottom:17px}
+.resume-document h1{font:700 26px/1.2 Georgia,"Times New Roman",serif;letter-spacing:0;margin:0 0 7px}
+.resume-document .resume-contact{font-size:12px;color:#111;margin:3px 0}
+.resume-document h2{font:700 14px/1.3 Georgia,"Times New Roman",serif;letter-spacing:0;color:#111;border:0;padding:0;margin:19px 0 7px;break-after:avoid}
+.resume-document p{margin:5px 0;white-space:pre-wrap}
+.resume-document .resume-entry{font-weight:700;margin-top:11px;break-after:avoid}
+.resume-document ul{padding-left:18px;margin:5px 0 10px}
+.resume-document li{padding-left:1px;margin:3px 0;white-space:pre-wrap}
 .resume-document li p{margin:0}
-@media(max-width:600px){.resume-document{padding:24px 20px;font-size:13px}.resume-document h1{font-size:24px}}
-@media print{.resume-document{max-width:none;margin:0!important;padding:0!important;border:0!important;box-shadow:none;font-size:10.5pt}.resume-document h1{font-size:22pt}.resume-document h2{font-size:10pt}.resume-document p,.resume-document li{orphans:2;widows:2}@page{margin:18mm}}
+@media(max-width:600px){.resume-document{padding:24px 20px;font-size:14px}.resume-document h1{font-size:24px}}
+@media print{.resume-document{max-width:none;margin:0!important;padding:0!important;border:0!important;box-shadow:none;font-size:11pt}.resume-document h1{font-size:20pt}.resume-document h2{font-size:11pt}.resume-document p,.resume-document li{orphans:2;widows:2}@page{margin:18mm}}
 `;
 const sectionHeading = text => /^(profile|summary|professional summary|objective|education|experience|work experience|professional experience|employment|employment history|projects|selected projects|selected AI and business technology projects|skills|technical skills|technical and analytical skills|certifications|certificates|awards|volunteer experience|volunteering|activities|leadership|references)$/i.test(text.trim());
 const bullet = text => /^[•●▪‣*–-]\s+/.test(text);
