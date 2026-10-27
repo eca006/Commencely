@@ -3,31 +3,33 @@
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Commencely — Resume</title><link rel="stylesheet" href="/style.css"></head>
 <body><main>
 <div class="resume-tools">
-<h1>Build my resume</h1>
+<h1>My resume</h1>
 <nav aria-label="Main"><a href="/">Find jobs</a> · <a href="/resume" aria-current="page">Build my resume</a> · <a href="/support">Find local support</a></nav>
-<p>Keep your uploaded resume exactly as it is, or create a separate editable text copy.</p>
-<h2>1. Start your draft</h2>
-<p id="resume-file-help">Import or replace resume: PDF, Word (.docx), or text (.txt), up to 5 MB</p>
+<p>Add your resume to keep it ready for your job search.</p>
+<h2>Add your resume</h2>
+<p id="resume-file-help">PDF, Word (.docx), or text (.txt) · Up to 5 MB</p>
 <input type="file" id="resume-file" accept=".pdf,.docx,.txt" hidden>
-<button id="choose-resume" type="button" aria-describedby="resume-file-help">Choose a resume file</button>
+<button id="choose-resume" type="button" aria-describedby="resume-file-help">Add my resume</button>
 <p id="selected-resume" role="status"></p>
 <section id="original-resume" hidden aria-labelledby="original-title">
-<h2 id="original-title">Your original resume</h2>
+<h2 id="original-title">Your resume</h2>
 <p id="original-filename"></p>
 <p id="original-status" role="status"></p>
-<a id="download-original" download>Download original file</a>
+<a id="download-original" download>Download my resume</a>
+<button id="remove-original" type="button">Remove resume</button>
 <p id="original-preview-status" role="status"></p>
 <div id="original-pdf" aria-label="Original resume PDF — unchanged layout" hidden></div>
-<p id="original-word-note" hidden>To view your Word document with its original formatting, download the original and open it in Word. The editable text copy below uses a different layout.</p>
+<p id="original-word-note" hidden>Open this file in Word to view it.</p>
 </section>
+<div id="builder-entry">
 <p><a class="resume-download-link" href="#resume-downloads">Go to download options ↓</a></p>
-<p>Your original file is kept in this browser and is not sent to a server or job provider. PDFs preview in their original layout. Word files download unchanged; open them in Word to see the original layout.</p>
-<p>Choosing a file saves the original in this browser. Saving an editable text copy is separate and never changes your original file.</p>
+<p>Already have a resume? Add it above. Need to make one? Start with the blank template below.</p>
 <button id="toggle-editable" type="button" hidden>Create or edit a text copy (layout may change)</button>
 <button id="save-imported-resume" type="button" disabled>Save resume on this browser</button>
 <p id="import-status" role="status" aria-live="polite"></p>
 <button id="start-template" type="button">Start a blank template</button>
 <p><a href="#resume-preview">Jump to resume preview</a></p>
+</div>
 <div id="editable-controls">
 <h2>Editable text copy</h2>
 <p>Imported text goes into the resume text box. Check its order and formatting. Move your name and contact details to the optional fields below if you want; remove any duplicates from the text.</p>

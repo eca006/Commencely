@@ -53,7 +53,7 @@ async function previewOriginalPDF(file){
       if(version!==pdfPreviewVersion)return;
       container.append(canvas);
     }
-    if(version===pdfPreviewVersion)note.textContent=`Original PDF preview · ${pdf.numPages} page${pdf.numPages===1?'':'s'}. Layout comes directly from your file.`;
+    if(version===pdfPreviewVersion)note.textContent=`Preview · ${pdf.numPages} page${pdf.numPages===1?'':'s'}`;
   }catch{if(version===pdfPreviewVersion)note.textContent='This PDF could not be previewed here. Download the original to view it; the file is unchanged.';}
   finally{if(task)await task.destroy().catch(()=>{});}
 }
@@ -71,7 +71,9 @@ function showOriginal(file,message){
   if(pdf)previewOriginalPDF(file);else{pdfPreviewVersion++;document.querySelector('#original-preview-status').textContent='';}
   document.querySelector('#original-word-note').hidden=!/\.docx$/i.test(file.name);
   document.querySelector('#download-original').href=originalURL;document.querySelector('#download-original').download=file.name;
-  document.querySelector('#toggle-editable').hidden=false;
+  document.querySelector('#builder-entry').hidden=true;
+  document.querySelector('#selected-resume').hidden=true;
+  document.querySelector('#choose-resume').textContent='Replace resume';
   showEditable(false);
   render();
 }
@@ -82,10 +84,10 @@ document.querySelector('#toggle-editable').addEventListener('click',()=>{
 document.querySelector('#download-original').addEventListener('click',()=>{
   if(!originalFile)return;
   status.textContent='Original file download requested: '+originalFile.name;
-  document.querySelector('#original-status').textContent='Original file download requested. Its contents and formatting are unchanged.';
+  document.querySelector('#original-status').textContent='Download requested.';
 });
 originalStorage('get').then(file=>{
-  if(!originalRevision&&file?.blob instanceof Blob)showOriginal(file,'Original file saved in this browser. Preview and download use the unchanged file.');
+  if(!originalRevision&&file?.blob instanceof Blob)showOriginal(file,'Resume ready. Saved on this browser.');
 }).catch(()=>{});
 document.querySelector('#choose-resume').addEventListener('click',()=>fileInput.click());
 function render(){
@@ -140,53 +142,25 @@ document.querySelector('#clear-resume').addEventListener('click',async()=>{
   try{await originalStorage('delete');}catch{status.textContent='Text draft cleared, but the original file could not be removed from browser storage. Remove site data in browser settings to clear it.';}
   originalFile=null;if(originalURL)URL.revokeObjectURL(originalURL);originalURL=null;
   pdfPreviewVersion++;document.querySelector('#original-pdf').replaceChildren();
-  document.querySelector('#original-resume').hidden=true;document.querySelector('#toggle-editable').hidden=true;showEditable(true);
+  document.querySelector('#original-resume').hidden=true;document.querySelector('#toggle-editable').hidden=true;document.querySelector('#builder-entry').hidden=false;document.querySelector('#selected-resume').hidden=false;document.querySelector('#choose-resume').textContent='Add my resume';showEditable(true);
   savedDraftText=null;importedFilename='';form.reset();fileInput.value='';importStatus.textContent='';render();
 });
-let mammothLoading;
-function loadMammoth(){
-  return mammothLoading ||= new Promise((resolve,reject)=>{const script=document.createElement('script');script.src='/vendor/mammoth.js';script.onload=()=>resolve(window.mammoth);script.onerror=()=>{mammothLoading=null;reject(new Error('Word reader could not load. Try again.'));};document.head.append(script);});
-}
+document.querySelector('#remove-original').addEventListener('click',()=>document.querySelector('#clear-resume').click());
 fileInput.addEventListener('change',async()=>{
-  const file=fileInput.files[0]; if(!file)return;
-  if((originalFile||resumeText(model()).trim()) && !confirm('Replace the original uploaded file and editable text copy? Download your current file first if you want to keep it.')){fileInput.value='';return;}
-  fileInput.disabled=true;document.querySelector('#choose-resume').disabled=true;form.inert=true;importStatus.textContent='Reading your resume locally…';
-  document.querySelectorAll('.resume-tools button').forEach(button=>{button.disabled=true;});
+  const file=fileInput.files[0];if(!file)return;
+  if(originalFile&&!confirm('Replace your current resume with this file?')){fileInput.value='';return;}
+  fileInput.disabled=true;document.querySelector('#choose-resume').disabled=true;
   try{
-    const type=validateResumeFile(file);let text='';
+    validateResumeFile(file);
     originalRevision++;
     const original={name:file.name,blob:file.slice(0,file.size,file.type)};
-    form.reset();savedDraftText=null;try{localStorage.removeItem(key);}catch{}
-    showOriginal(original,'Original file ready. Saving it in this browser…');
-    try{await originalStorage('put',original);document.querySelector('#original-status').textContent='Original file saved in this browser. Its contents and formatting are unchanged.';}
-    catch{document.querySelector('#original-status').textContent='Original available for this visit only: browser storage could not save it. Download it before leaving.';}
-    if(type==='txt')text=await file.text();
-    if(type==='docx'){const mammoth=await loadMammoth();const result=await mammoth.extractRawText({arrayBuffer:await file.arrayBuffer()});text=result.value;}
-    if(type==='pdf'){
-      const pdfjs=await import('/vendor/pdf.mjs');pdfjs.GlobalWorkerOptions.workerSrc='/vendor/pdf.worker.mjs';
-      const task=pdfjs.getDocument({data:new Uint8Array(await file.arrayBuffer()),isEvalSupported:false});
-      let passwordProtected=false;
-      task.onPassword=()=>{passwordProtected=true;task.destroy();};
-      let pdf;
-      try{pdf=await task.promise;}catch(error){if(passwordProtected)throw new Error('Password-protected PDFs aren’t supported. Choose an unlocked copy.');throw error;}
-      try{
-        if(pdf.numPages>20)throw new Error('Choose a resume with 20 pages or fewer.');
-        const pages=[];
-        for(let i=1;i<=pdf.numPages;i++){const page=await pdf.getPage(i);const content=await page.getTextContent();pages.push(content.items.map(item=>item.str+(item.hasEOL?'\n':' ')).join(''));}
-        text=pages.join('\n\n');
-      }finally{await task.destroy();}
-    }
-    if(!text.trim())throw new Error('No readable text was found. Scanned PDFs need OCR first; you can also paste your resume text below.');
-    if(text.length>50000)throw new Error('This file contains too much text. Use a shorter resume or paste the sections you need.');
-    importedFilename=file.name;form.elements.name.value='';form.elements.contact.value='';form.elements.body.value=text;
-    render();importStatus.textContent='Original file preserved. An optional text copy is available separately; its layout may differ.';
-    status.textContent='Imported draft is not saved. Download it or save the draft on this browser.';
+    showOriginal(original,'Adding your resume…');
+    try{await originalStorage('put',original);document.querySelector('#original-status').textContent='Resume added. Saved on this browser.';}
+    catch{document.querySelector('#original-status').textContent='Resume added for this visit. It could not be saved for next time.';}
   }catch(error){
-    if(originalFile)showEditable(false);
-    const message=error.message?.includes('password')?'Password-protected PDFs cannot be read as editable text.':error.message||'Could not read this file as editable text.';
-    importStatus.textContent=(originalFile?'Your original file is available unchanged. The editable text copy could not be created: ':'')+message;
-  }
-  finally{fileInput.disabled=false;form.inert=false;fileInput.value='';document.querySelector('#save-resume').disabled=false;document.querySelector('#clear-resume').disabled=false;document.querySelector('#download-original').disabled=!originalFile;document.querySelector('#toggle-editable').disabled=false;render();}
+    const message=error.message||'Could not add this file. Please try again.';
+    if(originalFile)document.querySelector('#original-status').textContent=message;else importStatus.textContent=message;
+  }finally{fileInput.disabled=false;fileInput.value='';render();}
 });
 function download(content,type,filename){const url=URL.createObjectURL(new Blob([content],{type}));const link=document.createElement('a');link.href=url;link.download=filename;document.body.append(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);status.textContent='Download requested. Check your browser downloads for '+filename+'.';}
 document.querySelector('#download-resume').addEventListener('click',()=>download(resumeText(model()),'text/plain;charset=utf-8','Commencely-resume.txt'));
