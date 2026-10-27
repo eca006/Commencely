@@ -10,6 +10,8 @@
 <label for="resume-file">Choose a resume: PDF, Word (.docx), or text (.txt), up to 5 MB</label>
 <input type="file" id="resume-file" accept=".pdf,.docx,.txt">
 <p>Files are read in this browser. Your resume is not uploaded to the server or sent to job providers. Scanned PDFs need selectable text; older .doc files aren’t supported.</p>
+<p>Choosing a file imports its text but does not save it. After importing, choose <strong>Save resume on this browser</strong> to keep it when you leave.</p>
+<button id="save-imported-resume" type="button" disabled>Save resume on this browser</button>
 <p id="import-status" role="status" aria-live="polite"></p>
 <button id="start-template" type="button">Start a blank template</button>
 <h2>2. Edit and review</h2>

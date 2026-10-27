@@ -12,8 +12,9 @@ function render(){
   document.querySelector('#preview-body').textContent=value.body;
   for(const id of ['download-resume','download-html','print-resume']) document.getElementById(id).disabled=!hasResumeContent(value);
   document.querySelector('#start-template').disabled=!!value.body.trim();
+  document.querySelector('#save-imported-resume').disabled=!hasResumeContent(value);
 }
-form.addEventListener('input',()=>{render();status.textContent='Unsaved changes. Download your resume or save the draft on this browser.';});
+form.addEventListener('input',()=>{render();importStatus.textContent='Changes are not saved yet. Choose Save resume on this browser to keep them.';status.textContent='Unsaved changes. Download your resume or save the draft on this browser.';});
 try {
   const saved=JSON.parse(localStorage.getItem(key));
   if(saved && ['name','contact','body'].every(field=>typeof saved[field]==='string')){
@@ -22,10 +23,11 @@ try {
   }
 }catch{status.textContent='Browser storage is unavailable. You can still edit and download your resume.';}
 document.querySelector('#start-template').addEventListener('click',()=>{form.elements.body.value=blankTemplate;render();status.textContent='Replace the headings with your real details. Leave out sections you don’t need.';});
-document.querySelector('#save-resume').addEventListener('click',()=>{
-  try{localStorage.setItem(key,JSON.stringify(model()));status.textContent='Draft saved on this browser. Anyone using this browser profile may be able to open it.';}
-  catch{status.textContent='Could not save this draft. Download it to keep a copy.';}
-});
+function saveDraft(){
+  try{localStorage.setItem(key,JSON.stringify(model()));status.textContent='Draft saved on this browser. Anyone using this browser profile may be able to open it.';importStatus.textContent='Resume saved on this browser. You can leave this page and return to your draft.';}
+  catch{status.textContent='Could not save this draft. Download it to keep a copy.';importStatus.textContent=status.textContent;}
+}
+for(const id of ['save-resume','save-imported-resume'])document.getElementById(id).addEventListener('click',saveDraft);
 document.querySelector('#clear-resume').addEventListener('click',()=>{
   if(!confirm('Clear the current resume draft and its saved browser copy? Download it first if you want to keep it.'))return;
   try{localStorage.removeItem(key);status.textContent='Draft and saved browser copy cleared.';}catch{status.textContent='Draft cleared from the page, but browser storage could not be cleared. Remove site data in browser settings.';}
