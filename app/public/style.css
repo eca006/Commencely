@@ -7,3 +7,37 @@ article { border: 1px solid #ccc; padding: 16px; margin: 16px 0; overflow-wrap: 
 h2 { font-size: 1.2rem; margin-top: 0; }
 a { color: #164eae; }
 .note { font-size: .9rem; color: #555; }
+textarea { font: inherit; padding: 10px; resize: vertical; }
+input, select, textarea { min-width: 0; max-width: 100%; box-sizing: border-box; }
+#resume-form { max-width: none; }
+#resume-file { display: block; margin: 12px 0; }
+#resume-preview { white-space: normal; }
+#preview-body { white-space: pre-wrap; overflow-wrap: anywhere; }
+#preview-name:empty, #preview-contact:empty { display: none; }
+@media print {
+  body { font: 11pt/1.4 Arial, sans-serif; color: #000; }
+  main { max-width: none; margin: 0; padding: 0; }
+  .resume-tools { display: none; }
+  #resume-preview { border: 0; margin: 0; padding: 0; }
+  #preview-name { font-size: 20pt; }
+  @page { margin: 18mm; }
+}
+
+#resume-file[hidden] { display: none; }
+
+#resume-downloads { border: 1px solid #cbd5e1; background: #f5f8fc; padding: 20px; margin: 24px 0; scroll-margin-top: 24px; }
+#resume-downloads button:not(:disabled) { background: #164eae; color: #fff; border: 1px solid #164eae; border-radius: 5px; font-weight: 600; }
+#resume-downloads button:not(:disabled):hover { background: #103c89; }
+#resume-downloads button:disabled { color: #666; background: #e6e6e6; cursor: not-allowed; }
+.resume-download-link { display: inline-block; background: #164eae; color: #fff; padding: 10px 14px; border-radius: 5px; font-weight: 600; }
+#resume-downloads button:focus-visible, .resume-download-link:focus-visible { outline: 3px solid #b85c00; outline-offset: 3px; }
+
+[hidden] { display: none !important; }
+#original-resume { margin: 20px 0; }
+#original-pdf { display: block; width: 100%; height: 850px; border: 1px solid #ccc; margin-top: 16px; background: #eee; }
+#download-original { background: #164eae; color: #fff; border: 1px solid #164eae; border-radius: 5px; font-weight: 600; }
+
+#original-pdf { height: auto; max-height: 1000px; overflow: auto; padding: 12px; box-sizing: border-box; }
+#original-pdf canvas { display: block; width: 100%; height: auto; background: #fff; margin: 0 auto 12px; }
+
+#download-original { display: inline-block; padding: 10px 14px; text-decoration: none; cursor: pointer; }
