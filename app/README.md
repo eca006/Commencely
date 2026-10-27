@@ -25,11 +25,13 @@ The selected VML/WPP Enterprise Solutions Greenhouse board is now a small full-d
 
 ## Resume builder
 
-Open http://localhost:3000/resume . PDF, DOCX, and TXT files (up to 5 MB; PDFs up to 20 pages) are read entirely in the browser using locally served PDF.js and Mammoth libraries. No resume-upload endpoint exists. Only fixed library paths are served, not arbitrary dependency or filesystem paths.
+Open http://localhost:3000/resume . PDF, DOCX, and TXT files up to 5 MB are retained as original Blobs in browser IndexedDB, with their filename. The original is saved on import and restored on reopening. Its download link uses those original bytes, not regenerated HTML or extracted text. Originals are not uploaded to the server. If storage fails, a warning tells users it is available only for the current visit.
 
-Start with section headings or import existing text; edit optional name/contact fields and the resume body. No skills or work history are generated or inferred. The original layout is not preserved; users must review extraction order, especially columns. Scanned PDFs require OCR elsewhere; password-protected PDFs and legacy DOC are unsupported.
+PDF previews render the supplied PDF pages locally using PDF.js (up to 20 pages), preserving page geometry, fonts, and images rather than rebuilding from text. Scanned PDFs can preview even when no editable text is available. Word files must be opened in Word via the original download to see exact layout; there is no claim of exact DOCX rendering in the browser. Password-protected or unsupported previews retain the original download.
 
-Drafts are saved to this browser only on explicit Save draft, with a clear-draft control. Files remain in memory until users choose to save/download. Downloads include plain text and standalone escaped HTML; Print / Save as PDF uses the browser print dialog and print-specific CSS. Empty heading-only drafts cannot be exported. Browser-local saves can be read by others using the same profile.
+An optional editable text copy is separate and hidden by default when an original exists. It uses locally served PDF.js/Mammoth, or plain text. Save draft applies to that copy only; its formatting may differ and edits never change the original. Only supplied facts are used. Plain text, formatted HTML, and browser Print / Save as PDF are explicitly labeled copy exports. Importing a replacement clears the old text copy after confirmation. Clearing asks to remove both the original and saved draft. Existing text-only saves require reimporting the original to recover original formatting.
+
+Browser storage is local to the profile and can be cleared by browser settings. Fixed dependency routes do not expose arbitrary filesystem paths.
 
 ## Local support directory
 

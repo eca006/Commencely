@@ -5,20 +5,31 @@
 <div class="resume-tools">
 <h1>Build my resume</h1>
 <nav aria-label="Main"><a href="/">Find jobs</a> · <a href="/resume" aria-current="page">Build my resume</a> · <a href="/support">Find local support</a></nav>
-<p>Upload an existing resume or start with a simple template. Use only your real education, skills, and experience.</p>
+<p>Keep your uploaded resume exactly as it is, or create a separate editable text copy.</p>
 <h2>1. Start your draft</h2>
 <p id="resume-file-help">Import or replace resume: PDF, Word (.docx), or text (.txt), up to 5 MB</p>
 <input type="file" id="resume-file" accept=".pdf,.docx,.txt" hidden>
 <button id="choose-resume" type="button" aria-describedby="resume-file-help">Choose a resume file</button>
 <p id="selected-resume" role="status"></p>
+<section id="original-resume" hidden aria-labelledby="original-title">
+<h2 id="original-title">Your original resume</h2>
+<p id="original-filename"></p>
+<p id="original-status" role="status"></p>
+<a id="download-original" download>Download original file</a>
+<p id="original-preview-status" role="status"></p>
+<div id="original-pdf" aria-label="Original resume PDF — unchanged layout" hidden></div>
+<p id="original-word-note" hidden>To view your Word document with its original formatting, download the original and open it in Word. The editable text copy below uses a different layout.</p>
+</section>
 <p><a class="resume-download-link" href="#resume-downloads">Go to download options ↓</a></p>
-<p>Files are read in this browser. Your resume is not uploaded to the server or sent to job providers. Scanned PDFs need selectable text; older .doc files aren’t supported.</p>
-<p>Choosing a file imports its text but does not save it. After importing, choose <strong>Save resume on this browser</strong> to keep it when you leave.</p>
+<p>Your original file is kept in this browser and is not sent to a server or job provider. PDFs preview in their original layout. Word files download unchanged; open them in Word to see the original layout.</p>
+<p>Choosing a file saves the original in this browser. Saving an editable text copy is separate and never changes your original file.</p>
+<button id="toggle-editable" type="button" hidden>Create or edit a text copy (layout may change)</button>
 <button id="save-imported-resume" type="button" disabled>Save resume on this browser</button>
 <p id="import-status" role="status" aria-live="polite"></p>
 <button id="start-template" type="button">Start a blank template</button>
 <p><a href="#resume-preview">Jump to resume preview</a></p>
-<h2>2. Edit and review</h2>
+<div id="editable-controls">
+<h2>Editable text copy</h2>
 <p>Imported text goes into the resume text box. Check its order and formatting. Move your name and contact details to the optional fields below if you want; remove any duplicates from the text.</p>
 <form id="resume-form">
 <label for="resume-name">Name (optional)</label><input id="resume-name" name="name" maxlength="150" autocomplete="off">
@@ -31,12 +42,13 @@
 <section id="resume-downloads" aria-labelledby="resume-download-title">
 <h2 id="resume-download-title">3. Download to your computer</h2>
 <p id="download-help">Choose a download below. Saving your draft above keeps it inside this browser.</p>
-<button id="download-resume" type="button">Download resume (.txt)</button>
-<button id="download-html" type="button">Download formatted resume (.html)</button>
-<button id="print-resume" type="button">Print / Save as PDF</button>
+<button id="download-resume" type="button">Download text copy (.txt)</button>
+<button id="download-html" type="button">Download formatted copy (.html)</button>
+<button id="print-resume" type="button">Print editable copy / Save as PDF</button>
 <p>For PDF, choose Save as PDF in your browser’s print window. Check page breaks before saving. Text import does not preserve the original layout.</p>
 </section>
-<h2>Preview</h2>
+<h2>Editable copy preview</h2>
+</div>
 </div>
 <article id="resume-preview" class="resume-document" aria-label="Resume preview"></article>
 </main><script type="module" src="/resume.js"></script></body></html>
