@@ -7,8 +7,10 @@
 <nav aria-label="Main"><a href="/">Find jobs</a> · <a href="/resume" aria-current="page">Build my resume</a> · <a href="/support">Find local support</a></nav>
 <p>Upload an existing resume or start with a simple template. Use only your real education, skills, and experience.</p>
 <h2>1. Start your draft</h2>
-<label for="resume-file">Choose a resume: PDF, Word (.docx), or text (.txt), up to 5 MB</label>
-<input type="file" id="resume-file" accept=".pdf,.docx,.txt">
+<p id="resume-file-help">Import or replace resume: PDF, Word (.docx), or text (.txt), up to 5 MB</p>
+<input type="file" id="resume-file" accept=".pdf,.docx,.txt" hidden>
+<button id="choose-resume" type="button" aria-describedby="resume-file-help">Choose a resume file</button>
+<p id="selected-resume" role="status"></p>
 <p>Files are read in this browser. Your resume is not uploaded to the server or sent to job providers. Scanned PDFs need selectable text; older .doc files aren’t supported.</p>
 <p>Choosing a file imports its text but does not save it. After importing, choose <strong>Save resume on this browser</strong> to keep it when you leave.</p>
 <button id="save-imported-resume" type="button" disabled>Save resume on this browser</button>
