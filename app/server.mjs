@@ -4,7 +4,12 @@ import { normalizeJobs } from './jobs.mjs';
 import { directionSearch, filterDirection } from './search.mjs';
 import { getEmployerJobs } from './employer-jobs.mjs';
 
-const files = { '/': ['index.html', 'text/html'], '/client.js': ['client.js', 'text/javascript'], '/careers.js': ['careers.js', 'text/javascript'], '/style.css': ['style.css', 'text/css'] };
+const files = { '/': ['index.html', 'text/html'], '/client.js': ['client.js', 'text/javascript'], '/careers.js': ['careers.js', 'text/javascript'], '/style.css': ['style.css', 'text/css'], '/resume': ['resume.html','text/html'], '/resume.js':['resume.js','text/javascript'], '/resume-model.js':['resume-model.js','text/javascript'] };
+const vendorFiles = {
+  '/vendor/pdf.mjs':'pdfjs-dist/build/pdf.mjs',
+  '/vendor/pdf.worker.mjs':'pdfjs-dist/build/pdf.worker.mjs',
+  '/vendor/mammoth.js':'mammoth/mammoth.browser.min.js'
+};
 const json = (res, status, data) => {
   res.writeHead(status, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
   res.end(JSON.stringify(data));
@@ -13,6 +18,10 @@ http.createServer(async (req, res) => {
   try {
     const url = new URL(req.url, 'http://localhost');
     if (req.method !== 'GET') return json(res, 405, { error: 'Method not allowed.' });
+    if (vendorFiles[url.pathname]) {
+      const content = await readFile(new URL('./node_modules/'+vendorFiles[url.pathname],import.meta.url));
+      res.writeHead(200,{'Content-Type':'text/javascript; charset=utf-8'}); return res.end(content);
+    }
     if (url.pathname === '/api/employer-jobs') {
       const query=Object.fromEntries(['direction','keywords','location'].map(key=>[key,url.searchParams.get(key)||'']));
       if (query.direction && !directionSearch(query.direction) || Object.values(query).some(value=>value.length>120)) return json(res,400,{error:'Invalid search.'});

@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Commencely — Resume</title><link rel="stylesheet" href="/style.css"></head>
+<body><main>
+<div class="resume-tools">
+<h1>Build my resume</h1>
+<nav aria-label="Main"><a href="/">Find jobs</a> · <a href="/resume" aria-current="page">Build my resume</a></nav>
+<p>Upload an existing resume or start with a simple template. Use only your real education, skills, and experience.</p>
+<h2>1. Start your draft</h2>
+<label for="resume-file">Choose a resume: PDF, Word (.docx), or text (.txt), up to 5 MB</label>
+<input type="file" id="resume-file" accept=".pdf,.docx,.txt">
+<p>Files are read in this browser. Your resume is not uploaded to the server or sent to job providers. Scanned PDFs need selectable text; older .doc files aren’t supported.</p>
+<p id="import-status" role="status" aria-live="polite"></p>
+<button id="start-template" type="button">Start a blank template</button>
+<h2>2. Edit and review</h2>
+<p>Imported text goes into the resume text box. Check its order and formatting. Move your name and contact details to the optional fields below if you want; remove any duplicates from the text.</p>
+<form id="resume-form">
+<label for="resume-name">Name (optional)</label><input id="resume-name" name="name" maxlength="150" autocomplete="off">
+<label for="resume-contact">Contact details (optional)</label><input id="resume-contact" name="contact" maxlength="500" autocomplete="off">
+<label for="resume-body">Resume text</label><textarea id="resume-body" name="body" rows="22" maxlength="50000" placeholder="Add your education, experience, projects, and skills. Use only facts you can support."></textarea>
+</form>
+<p id="resume-status" role="status" aria-live="polite">Your draft is not saved. Download it before leaving, or choose Save draft on this browser.</p>
+<button id="save-resume" type="button">Save draft on this browser</button>
+<button id="clear-resume" type="button">Clear draft and saved copy</button>
+<h2>3. Download</h2>
+<button id="download-resume" type="button">Download resume (.txt)</button>
+<button id="download-html" type="button">Download formatted resume (.html)</button>
+<button id="print-resume" type="button">Print / Save as PDF</button>
+<p>For PDF, choose Save as PDF in your browser’s print window. Check page breaks before saving. Text import does not preserve the original layout.</p>
+<h2>Preview</h2>
+</div>
+<article id="resume-preview" aria-label="Resume preview"><h1 id="preview-name"></h1><p id="preview-contact"></p><div id="preview-body"></div></article>
+</main><script type="module" src="/resume.js"></script></body></html>
