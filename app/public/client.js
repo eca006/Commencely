@@ -3,6 +3,29 @@ const questionnaire = document.querySelector('#questionnaire');
 const directions = document.querySelector('#directions');
 const profileStatus = document.querySelector('#profile-status');
 const storageKey = 'commencely-profile-v1';
+let loadedAnswers = null;
+let savedSearch = null;
+let activeSearch = null;
+let searchVersion = 0;
+const autoStatus = document.querySelector('#automatic-search-status');
+function searchFromAnswers(answers) {
+  const ranked = recommend(answers);
+  const tied = ranked.filter(career => career.score === ranked[0].score);
+  if (tied.length > 1) {
+    activeSearch?.abort(); searchVersion++;
+    results.replaceChildren();
+    form.querySelector('button').disabled = false;
+    autoStatus.textContent = 'Your answers point equally toward all three directions. Choose “Find jobs in this direction” on any direction below to start. None is a stronger fit.';
+    status.textContent = 'Choose a career direction above, or use the search form.';
+    return;
+  }
+  const career = ranked[0];
+  directionSelect.value = career.id;
+  document.querySelector('#keywords').value = career.keyword;
+  autoStatus.textContent = `Jobs below use ${career.title} because ${career.score} of your 3 answers point here. This reflects interests, not qualifications. You can switch directions or search below.`;
+  form.requestSubmit();
+  return true;
+}
 function showDirections(answers) {
   directions.replaceChildren();
   for (const career of recommend(answers)) {
@@ -15,6 +38,7 @@ function showDirections(answers) {
     button.addEventListener('click', () => {
       document.querySelector('#keywords').value = career.keyword;
       document.querySelector('#direction').value = career.id;
+      autoStatus.textContent = `You chose ${career.title}. You can switch directions any time.`;
       form.requestSubmit();
       document.querySelector('#job-search-title').scrollIntoView({ behavior: 'smooth' });
     });
@@ -24,7 +48,9 @@ function showDirections(answers) {
 questionnaire.addEventListener('submit', event => {
   event.preventDefault();
   const answers = Object.fromEntries(new FormData(questionnaire));
+  loadedAnswers = answers;
   showDirections(answers);
+  if (searchFromAnswers(answers)) document.querySelector('#job-search-title').scrollIntoView({behavior:'smooth'});
   document.querySelector('#questionnaire-panel').open = false;
   try { localStorage.setItem(storageKey, JSON.stringify(answers)); profileStatus.textContent = 'Career answers saved. Search again or switch directions below—no need to answer again. Equal scores are ties.'; }
   catch { profileStatus.textContent = 'Directions ready. This browser could not save your answers.'; }
@@ -32,12 +58,16 @@ questionnaire.addEventListener('submit', event => {
 document.querySelector('#clear-profile').addEventListener('click', () => {
   try { localStorage.removeItem(storageKey); profileStatus.textContent = 'Saved answers cleared.'; }
   catch { profileStatus.textContent = 'Could not clear browser storage. Use your browser settings to remove saved answers.'; }
+  loadedAnswers = null; activeSearch?.abort(); searchVersion++;
+  form.querySelector('button').disabled = false; results.replaceChildren();
+  autoStatus.textContent = ''; status.textContent = 'Enter a search to load jobs.';
   questionnaire.reset(); directions.replaceChildren();
   document.querySelector('#questionnaire-panel').open = true;
 });
 try {
   const answers = JSON.parse(localStorage.getItem(storageKey));
   if (validAnswers(answers)) {
+    loadedAnswers = answers;
     for (const field of ['interest', 'strength', 'task']) questionnaire.elements[field].value = answers[field];
     showDirections(answers); profileStatus.textContent = 'Career answers loaded. Search again or switch directions below—no need to answer again. Equal scores are ties.';
     document.querySelector('#questionnaire-panel').open = false;
@@ -55,6 +85,7 @@ document.querySelector('#keywords').addEventListener('input', () => { directionS
 try {
   const saved = JSON.parse(localStorage.getItem('commencely-search-v1'));
   if (saved && typeof saved.keywords === 'string' && typeof saved.location === 'string') {
+    savedSearch = saved;
     document.querySelector('#keywords').value = saved.keywords;
     document.querySelector('#location').value = saved.location;
     directionSelect.value = careers.some(item => item.id === saved.direction) ? saved.direction : '';
@@ -62,6 +93,9 @@ try {
 } catch {}
 form.addEventListener('submit', async event => {
   event.preventDefault();
+  activeSearch?.abort();
+  const controller = new AbortController(); activeSearch = controller;
+  const version = ++searchVersion;
   const button = form.querySelector('button');
   button.disabled = true;
   status.textContent = 'Loading jobs…';
@@ -70,12 +104,13 @@ form.addEventListener('submit', async event => {
   try {
     const params = new URLSearchParams(new FormData(form));
     const load = async endpoint => {
-      const response = await fetch(endpoint + '?' + params);
+      const response = await fetch(endpoint + '?' + params, {signal: controller.signal});
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || 'Unable to load jobs.');
       return data;
     };
     const [adzuna, employer] = await Promise.allSettled([load('/api/jobs'),load('/api/employer-jobs')]);
+    if (version !== searchVersion) return;
     if (adzuna.status === 'rejected' && employer.status === 'rejected') throw new Error('Both job sources are unavailable. Please try again.');
     const data = adzuna.status === 'fulfilled' ? adzuna.value : {jobs:[],count:0};
     const employerJobs = employer.status === 'fulfilled' ? employer.value.jobs : [];
@@ -122,6 +157,13 @@ form.addEventListener('submit', async event => {
       }
       results.append(card);
     }
-  } catch (error) { status.textContent = error.message; }
-  finally { button.disabled = false; }
+  } catch (error) { if (version === searchVersion) status.textContent = error.message; }
+  finally { if (version === searchVersion) button.disabled = false; }
 });
+
+if (loadedAnswers) {
+  if (savedSearch && document.querySelector('#location').value.trim()) {
+    autoStatus.textContent = 'Your last search loads automatically below. Your career answers are still saved; switch directions below whenever you want.';
+    form.requestSubmit();
+  } else searchFromAnswers(loadedAnswers);
+}

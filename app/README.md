@@ -34,3 +34,7 @@ Drafts are saved to this browser only on explicit Save draft, with a clear-draft
 ## Local support directory
 
 `/support` links to three starting resources: the Fayetteville Arkansas Workforce Center, NWACC Career Services, and Arkansas 211 powered by Hark. Each entry includes its audience, contact action, and official source. Sources checked October 27, 2026; services and eligibility need periodic review. This is a manually curated directory, not live availability or automatic referrals.
+
+## Jobs from saved answers
+
+Submitting a complete questionnaire starts a search for the uniquely highest-scoring direction and scrolls to the search. Equal scores require choosing a direction rather than inventing a stronger fit. Returning with saved answers restores and loads the last submitted search, including manual keywords and location. Without a saved search, a unique leading direction starts the search. Manual searches and direction buttons remain available. New searches cancel older in-flight requests so stale responses cannot replace the current results; clearing career answers cancels the current request and clears its displayed results. This is interest-based search, not resume matching or qualification screening.
