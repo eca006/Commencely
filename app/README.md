@@ -30,3 +30,7 @@ Open http://localhost:3000/resume . PDF, DOCX, and TXT files (up to 5 MB; PDFs u
 Start with section headings or import existing text; edit optional name/contact fields and the resume body. No skills or work history are generated or inferred. The original layout is not preserved; users must review extraction order, especially columns. Scanned PDFs require OCR elsewhere; password-protected PDFs and legacy DOC are unsupported.
 
 Drafts are saved to this browser only on explicit Save draft, with a clear-draft control. Files remain in memory until users choose to save/download. Downloads include plain text and standalone escaped HTML; Print / Save as PDF uses the browser print dialog and print-specific CSS. Empty heading-only drafts cannot be exported. Browser-local saves can be read by others using the same profile.
+
+## Local support directory
+
+`/support` links to three starting resources: the Fayetteville Arkansas Workforce Center, NWACC Career Services, and Arkansas 211 powered by Hark. Each entry includes its audience, contact action, and official source. Sources checked October 27, 2026; services and eligibility need periodic review. This is a manually curated directory, not live availability or automatic referrals.
