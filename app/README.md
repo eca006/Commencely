@@ -38,3 +38,5 @@ Drafts are saved to this browser only on explicit Save draft, with a clear-draft
 ## Jobs from saved answers
 
 Submitting a complete questionnaire starts a search for the uniquely highest-scoring direction and scrolls to the search. Equal scores require choosing a direction rather than inventing a stronger fit. Returning with saved answers restores and loads the last submitted search, including manual keywords and location. Without a saved search, a unique leading direction starts the search. Manual searches and direction buttons remain available. New searches cancel older in-flight requests so stale responses cannot replace the current results; clearing career answers cancels the current request and clears its displayed results. This is interest-based search, not resume matching or qualification screening.
+
+Resume preview and formatted HTML share a simple document layout with section headings, paragraph spacing, and bullet lists. Common headings are recognized from the supplied text; the source editor and plain-text download are unchanged. Wrapped lines are joined for display. Check the preview when importing unusual formats.

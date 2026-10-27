@@ -16,6 +16,7 @@
 <button id="save-imported-resume" type="button" disabled>Save resume on this browser</button>
 <p id="import-status" role="status" aria-live="polite"></p>
 <button id="start-template" type="button">Start a blank template</button>
+<p><a href="#resume-preview">Jump to resume preview</a></p>
 <h2>2. Edit and review</h2>
 <p>Imported text goes into the resume text box. Check its order and formatting. Move your name and contact details to the optional fields below if you want; remove any duplicates from the text.</p>
 <form id="resume-form">
@@ -33,5 +34,5 @@
 <p>For PDF, choose Save as PDF in your browser’s print window. Check page breaks before saving. Text import does not preserve the original layout.</p>
 <h2>Preview</h2>
 </div>
-<article id="resume-preview" aria-label="Resume preview"><h1 id="preview-name"></h1><p id="preview-contact"></p><div id="preview-body"></div></article>
+<article id="resume-preview" class="resume-document" aria-label="Resume preview"></article>
 </main><script type="module" src="/resume.js"></script></body></html>

@@ -1,4 +1,5 @@
-import { blankTemplate, resumeText, resumeHTML, hasResumeContent, validateResumeFile } from './resume-model.js';
+import { blankTemplate, resumeText, resumeHTML, hasResumeContent, validateResumeFile, resumeMarkup, resumeStyles } from './resume-model.js';
+const previewStyle=document.createElement('style');previewStyle.textContent=resumeStyles;document.head.append(previewStyle);
 const form=document.querySelector('#resume-form');
 const status=document.querySelector('#resume-status');
 const importStatus=document.querySelector('#import-status');
@@ -10,9 +11,7 @@ let importedFilename='';
 document.querySelector('#choose-resume').addEventListener('click',()=>fileInput.click());
 function render(){
   const value=model();
-  document.querySelector('#preview-name').textContent=value.name;
-  document.querySelector('#preview-contact').textContent=value.contact;
-  document.querySelector('#preview-body').textContent=value.body;
+  document.querySelector('#resume-preview').innerHTML=resumeMarkup(value);
   for(const id of ['download-resume','download-html','print-resume']) document.getElementById(id).disabled=!hasResumeContent(value);
   document.querySelector('#start-template').disabled=!!value.body.trim();
   const alreadySaved=JSON.stringify(value)===savedDraftText;
