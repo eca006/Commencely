@@ -12,6 +12,7 @@ document.querySelector('#choose-resume').addEventListener('click',()=>fileInput.
 function render(){
   const value=model();
   document.querySelector('#resume-preview').innerHTML=resumeMarkup(value);
+  document.querySelector('#download-help').textContent=hasResumeContent(value)?'Your resume is ready. Choose a blue button to save a file to your computer.':'Import a resume or add your details first to enable downloads.';
   for(const id of ['download-resume','download-html','print-resume']) document.getElementById(id).disabled=!hasResumeContent(value);
   document.querySelector('#start-template').disabled=!!value.body.trim();
   const alreadySaved=JSON.stringify(value)===savedDraftText;
@@ -26,15 +27,19 @@ function render(){
 form.addEventListener('input',()=>{render();importStatus.textContent='Changes are not saved yet. Choose Save resume on this browser to keep them.';status.textContent='Unsaved changes. Download your resume or save the draft on this browser.';});
 try {
   const saved=JSON.parse(localStorage.getItem(key));
-  if(saved && ['name','contact','body'].every(field=>typeof saved[field]==='string')){
+  if(saved && ['name','contact','body'].every(field=>typeof saved[field]==='string') && hasResumeContent(saved)){
     for(const field of ['name','contact','body']) form.elements[field].value=saved[field];
     savedDraftText=JSON.stringify(model());
     importStatus.textContent='Saved resume loaded. You do not need to upload it again. Edit below, or use Download to save a file to your computer.';
     status.textContent='Loaded your saved draft from this browser. Changes are saved only when you choose Save draft.';
+  }else if(saved){
+    importStatus.textContent='No saved resume text was found. Choose your original resume file again to restore it.';
+    status.textContent='No resume text is available to download yet.';
   }
 }catch{status.textContent='Browser storage is unavailable. You can still edit and download your resume.';}
 document.querySelector('#start-template').addEventListener('click',()=>{form.elements.body.value=blankTemplate;render();status.textContent='Replace the headings with your real details. Leave out sections you don’t need.';});
 function saveDraft(){
+  if(!hasResumeContent(model())){importStatus.textContent='Import a resume or enter your details before saving. Your saved copy has not been replaced.';return;}
   try{
     const serialized=JSON.stringify(model());
     localStorage.setItem(key,serialized);

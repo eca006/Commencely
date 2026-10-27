@@ -11,6 +11,7 @@
 <input type="file" id="resume-file" accept=".pdf,.docx,.txt" hidden>
 <button id="choose-resume" type="button" aria-describedby="resume-file-help">Choose a resume file</button>
 <p id="selected-resume" role="status"></p>
+<p><a class="resume-download-link" href="#resume-downloads">Go to download options ↓</a></p>
 <p>Files are read in this browser. Your resume is not uploaded to the server or sent to job providers. Scanned PDFs need selectable text; older .doc files aren’t supported.</p>
 <p>Choosing a file imports its text but does not save it. After importing, choose <strong>Save resume on this browser</strong> to keep it when you leave.</p>
 <button id="save-imported-resume" type="button" disabled>Save resume on this browser</button>
@@ -27,11 +28,14 @@
 <p id="resume-status" role="status" aria-live="polite">Your draft is not saved. Download it before leaving, or choose Save draft on this browser.</p>
 <button id="save-resume" type="button">Save draft on this browser</button>
 <button id="clear-resume" type="button">Clear draft and saved copy</button>
-<h2>3. Download</h2>
+<section id="resume-downloads" aria-labelledby="resume-download-title">
+<h2 id="resume-download-title">3. Download to your computer</h2>
+<p id="download-help">Choose a download below. Saving your draft above keeps it inside this browser.</p>
 <button id="download-resume" type="button">Download resume (.txt)</button>
 <button id="download-html" type="button">Download formatted resume (.html)</button>
 <button id="print-resume" type="button">Print / Save as PDF</button>
 <p>For PDF, choose Save as PDF in your browser’s print window. Check page breaks before saving. Text import does not preserve the original layout.</p>
+</section>
 <h2>Preview</h2>
 </div>
 <article id="resume-preview" class="resume-document" aria-label="Resume preview"></article>
