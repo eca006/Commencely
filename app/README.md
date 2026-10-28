@@ -35,7 +35,7 @@ Browser storage is local to the profile and can be cleared by browser settings. 
 
 ## Local support directory
 
-`/support` links to three starting resources: the Fayetteville Arkansas Workforce Center, NWACC Career Services, and Arkansas 211 powered by Hark. Each entry includes its audience, contact action, and official source. Sources checked October 27, 2026; services and eligibility need periodic review. This is a manually curated directory, not live availability or automatic referrals.
+`/support` includes the Fayetteville Arkansas Workforce Center, NWACC Career Services, Arkansas 211 powered by Hark, Dress for Success Northwest Arkansas, Goodwill Industries of Arkansas Career Services, and Walton Career Closet. Clothing and interview support have separate category links. New entries were checked October 28, 2026; earlier entries retain their October 27 check dates. Each entry includes its audience, contact action, and official source. Sources checked October 27, 2026; services and eligibility need periodic review. This is a manually curated directory, not live availability or automatic referrals.
 
 ## Jobs from saved answers
 
