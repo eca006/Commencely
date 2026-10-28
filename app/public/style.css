@@ -44,3 +44,13 @@ input, select, textarea { min-width: 0; max-width: 100%; box-sizing: border-box;
 
 .resume-edit-link { display: inline-block; padding: 10px 14px; margin: 0 8px; border: 1px solid #777; border-radius: 5px; }
 #editor-form { max-width: none; }
+
+#builder-form { max-width: none; }
+#builder-form section, #builder-form fieldset { display: grid; gap: 8px; }
+#builder-form section[hidden] { display: none; }
+#builder-form fieldset { min-width: 0; border: 1px solid #ccc; padding: 18px; margin: 16px 0; }
+#builder-form legend { font-weight: 600; padding: 0 6px; }
+#builder-form .note { margin: 0 0 6px; }
+.builder-navigation { display: flex; gap: 12px; margin-top: 18px; }
+#builder-next { background: #164eae; border: 1px solid #164eae; color: #fff; }
+#builder-progress { font-weight: 600; }

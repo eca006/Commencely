@@ -3,7 +3,7 @@ const style=document.createElement('style');style.textContent=resumeStyles;docum
 const form=document.querySelector('#editor-form');
 const status=document.querySelector('#editor-status');
 const value=()=>Object.fromEntries(new FormData(form));
-let storageKey='commencely-editor-blank-v1';
+let storageKey=new URLSearchParams(location.search).has('builder')?'commencely-builder-edit-v1':'commencely-editor-blank-v1';
 let savedText=null;
 let ready=false;
 function render(){
@@ -36,7 +36,8 @@ async function extract(file){
 }
 async function open(){
   try{
-    const file=new URLSearchParams(location.search).has('new')?null:await getOriginal();
+    const params=new URLSearchParams(location.search);
+    const file=params.has('new')||params.has('builder')?null:await getOriginal();
     if(file?.blob instanceof Blob){
       const digest=await crypto.subtle.digest('SHA-256',await file.blob.arrayBuffer());
       storageKey='commencely-editor-v1-'+Array.from(new Uint8Array(digest),byte=>byte.toString(16).padStart(2,'0')).join('');

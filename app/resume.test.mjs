@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {resumeText,resumeHTML,hasResumeContent,blankTemplate,validateResumeFile,resumeMarkup} from './public/resume-model.js';
+import {resumeText,resumeHTML,hasResumeContent,blankTemplate,validateResumeFile,resumeMarkup,buildGuidedResume} from './public/resume-model.js';
 test('exports only provided facts and keeps multiline text',()=>{
   const model={name:'Jordan Sample',contact:'jordan@example.test',body:'EXPERIENCE\nCampus desk assistant\nAnswered visitor questions.'};
   assert.equal(resumeText(model),'Jordan Sample\n\njordan@example.test\n\nEXPERIENCE\nCampus desk assistant\nAnswered visitor questions.');
@@ -26,4 +26,17 @@ test('resume layout joins wrapped bullets and keeps all supplied words in order'
   assert.match(html,/<li>Helped visitors and answered questions.<\/li>/);
   const words=value=>value.replace(/[•]/g,'').replace(/\s+/g,' ').trim();
   assert.equal(words(html.replace(/<[^>]*>/g,' ')),words(source));
+});
+
+test('guided builder supports a first resume without paid work or invented claims',()=>{
+  const result=buildGuidedResume({name:'Jordan Sample',email:'jordan@example.test',education:[{school:'Example School',qualification:'Business course',dates:'Expected 2027'}],skills:'Excel — basic\nSpanish',experience:[{}],projects:[]});
+  assert.equal(result.name,'Jordan Sample');assert.equal(result.contact,'jordan@example.test');
+  assert.ok(!result.body.includes('EXPERIENCE'));assert.ok(!result.body.includes('PROJECTS'));assert.ok(!result.body.includes('PROFILE'));
+  assert.match(result.body,/Expected 2027/);assert.match(result.body,/• Excel — basic/);
+  assert.equal(hasResumeContent(buildGuidedResume({name:'Jordan',education:[{}]})),false);
+});
+test('guided builder preserves entered tasks and results without inventing numbers',()=>{
+  const result=buildGuidedResume({experience:[{role:'Volunteer',organization:'Community club',tasks:'Welcomed visitors\nOrganized supplies',results:'Kept supplies easy to find'}],projects:[{title:'Class project',contribution:'Made a spreadsheet'}]});
+  assert.match(result.body,/• Welcomed visitors\n• Organized supplies\n• Kept supplies easy to find/);
+  assert.match(result.body,/PROJECTS\nClass project\n• Made a spreadsheet/);assert.ok(!/\d/.test(result.body));
 });

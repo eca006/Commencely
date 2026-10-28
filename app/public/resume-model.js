@@ -64,3 +64,29 @@ export function resumeMarkup({name='',contact='',body=''}={}){
 export function resumeHTML(model={}) {
   return '<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Resume</title><style>'+resumeStyles+'</style><article class="resume-document">'+resumeMarkup(model)+'</article></html>';
 }
+
+export function buildGuidedResume(answers={}){
+  const clean=value=>typeof value==='string'?value.trim():'';
+  const lines=value=>clean(value).split('\n').map(line=>line.trim()).filter(Boolean);
+  const blocks=[];
+  if(clean(answers.summary))blocks.push('PROFILE\n'+clean(answers.summary));
+  const education=(answers.education||[]).map(item=>{
+    const details=[clean(item.qualification),clean(item.school),clean(item.dates),clean(item.notes)].filter(Boolean);
+    return details.join('\n');
+  }).filter(Boolean);
+  if(education.length)blocks.push('EDUCATION\n'+education.join('\n\n'));
+  const experience=(answers.experience||[]).map(item=>{
+    const details=[clean(item.role),clean(item.organization),clean(item.dates)].filter(Boolean);
+    const bullets=[...lines(item.tasks),...lines(item.results)].map(line=>'• '+line.replace(/^[•*]\s+/,''));
+    return [...details,...bullets].join('\n');
+  }).filter(Boolean);
+  if(experience.length)blocks.push('EXPERIENCE\n'+experience.join('\n\n'));
+  const projects=(answers.projects||[]).map(item=>{
+    const details=[clean(item.title),clean(item.context),clean(item.dates)].filter(Boolean);
+    return [...details,...lines(item.contribution).map(line=>'• '+line.replace(/^[•*]\s+/,''))].join('\n');
+  }).filter(Boolean);
+  if(projects.length)blocks.push('PROJECTS\n'+projects.join('\n\n'));
+  const skills=lines(answers.skills);
+  if(skills.length)blocks.push('SKILLS\n'+skills.map(line=>'• '+line.replace(/^[•*]\s+/,'')).join('\n'));
+  return {name:clean(answers.name),contact:['city','email','phone','link'].map(field=>clean(answers[field])).filter(Boolean).join(' | '),body:blocks.join('\n\n')};
+}

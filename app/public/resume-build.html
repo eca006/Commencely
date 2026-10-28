@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Commencely — Build a resume</title><link rel="stylesheet" href="/style.css"></head>
+<body><main>
+<div class="resume-tools">
+<p><a href="/resume">← Back to my resume</a></p><h1>Build your first resume</h1>
+<p>We’ll walk through what to include. Paid work isn’t required—school, volunteering, projects, and other responsibilities can help show what you can do.</p>
+<p id="builder-progress" role="status">Step 1 of 5 · About you</p>
+<p id="builder-status" role="status">Your progress is not saved yet.</p>
+<button id="save-builder" type="button">Save progress on this browser</button>
+<form id="builder-form">
+<section data-step="0" aria-labelledby="about-title"><h2 id="about-title">About you</h2>
+<p>How should an employer contact you? A street address isn’t needed. Leave out any contact detail you don’t want to share.</p>
+<label for="builder-name">Your name</label><input id="builder-name" name="name" required maxlength="150" autocomplete="name">
+<label for="builder-city">City and state (optional)</label><input id="builder-city" name="city" maxlength="150">
+<label for="builder-email">Email (optional)</label><input id="builder-email" name="email" type="email" maxlength="200" autocomplete="email">
+<label for="builder-phone">Phone (optional)</label><input id="builder-phone" name="phone" type="tel" maxlength="80" autocomplete="tel">
+<label for="builder-link">Portfolio or professional profile link (optional)</label><input id="builder-link" name="link" maxlength="300">
+<label for="builder-summary">What kind of work are you looking for, and what can you bring? (optional)</label><textarea id="builder-summary" name="summary" rows="3" maxlength="1500" aria-describedby="summary-help"></textarea>
+<p id="summary-help" class="note">You can mention what you’re studying, a skill you’ve practiced, or work you want to learn. Skip this if you’re unsure.</p>
+</section>
+<section data-step="1" hidden aria-labelledby="education-title"><h2 id="education-title">Education and training</h2>
+<p>What school, course, certificate, or training have you attended? Include something you’re still working toward and say when you expect to finish. You can skip this step.</p>
+<div id="education-entries"></div><button data-add="education" type="button">Add another school or course</button>
+</section>
+<section data-step="2" hidden aria-labelledby="experience-title"><h2 id="experience-title">Experience</h2>
+<p>Think beyond paid jobs. Have you volunteered, helped a family business, organized an event, cared for someone, or held a campus role? Describe your own role and what you contributed.</p>
+<p>No experience to add yet? Leave this blank and go to the next step.</p>
+<div id="experience-entries"></div><button data-add="experience" type="button">Add another experience</button>
+</section>
+<section data-step="3" hidden aria-labelledby="skills-title"><h2 id="skills-title">Projects and skills</h2>
+<p>A class assignment, personal project, club activity, or community project can show what you’ve practiced. Focus on your own contribution. Skip anything you don’t have yet.</p>
+<div id="projects-entries"></div><button data-add="projects" type="button">Add another project</button>
+<label for="builder-skills">What tools, languages, or practical skills can you use?</label><textarea id="builder-skills" name="skills" rows="5" maxlength="4000" aria-describedby="skills-help"></textarea>
+<p id="skills-help" class="note">Write one skill per line. Think about software you’ve used, a language you speak, equipment you can operate, or a task you can demonstrate. Add your level when helpful, such as “Excel — basic.”</p>
+</section>
+<section data-step="4" hidden aria-labelledby="review-title"><h2 id="review-title">Review your resume</h2>
+<p>Check names, dates, spelling, and every statement. Empty sections are left out. Use Back to change an answer, or open the full-text editor for final adjustments.</p>
+<p id="builder-review-status" role="status"></p>
+<div id="resume-downloads">
+<button id="builder-download" type="button">Download formatted resume (.html)</button>
+<button id="builder-print" type="button">Print / Save as PDF</button>
+<button id="builder-edit" type="button">Open full-text editor</button>
+</div>
+</section>
+<div class="builder-navigation"><button id="builder-back" type="button">Back</button><button id="builder-next" type="button">Next: Education</button></div>
+</form></div>
+<article id="resume-preview" class="resume-document" aria-label="Resume preview" hidden></article>
+</main><script type="module" src="/resume-build.js"></script></body></html>
