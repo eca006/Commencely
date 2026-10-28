@@ -40,3 +40,15 @@ test('guided builder preserves entered tasks and results without inventing numbe
   assert.match(result.body,/• Welcomed visitors\n• Organized supplies\n• Kept supplies easy to find/);
   assert.match(result.body,/PROJECTS\nClass project\n• Made a spreadsheet/);assert.ok(!/\d/.test(result.body));
 });
+
+test('guided dates remain plain metadata beside each role, course, and project',()=>{
+  const model=buildGuidedResume({name:'Jordan',education:[{qualification:'Business course',school:'Example School',dates:'Expected 2027'}],experience:[{role:'Volunteer',organization:'Community club',dates:'May 2024 – Present',tasks:'Welcomed visitors'}],projects:[{title:'Class project',dates:'Spring 2026',contribution:'Made a spreadsheet'}]});
+  for(const html of [resumeMarkup(model),resumeHTML(model)]){
+    for(const date of ['Expected 2027','May 2024 – Present','Spring 2026']){
+      assert.ok(html.includes('<p class="resume-dates">'+date+'</p>'));
+      assert.ok(!html.includes('<h2>'+date));assert.ok(!html.includes('<p class="resume-entry">'+date));
+    }
+    assert.ok(html.includes('<p class="resume-entry-title">Volunteer</p>'));
+    assert.ok(html.includes('<p class="resume-organization">Community club</p>'));
+  }
+});

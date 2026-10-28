@@ -24,12 +24,18 @@ export const resumeStyles = `
 .resume-document ul{padding-left:18px;margin:5px 0 10px}
 .resume-document li{padding-left:1px;margin:3px 0;white-space:pre-wrap}
 .resume-document li p{margin:0}
+.resume-document .resume-entry-heading{display:flex;justify-content:space-between;align-items:baseline;gap:8px 20px;flex-wrap:wrap;margin-top:11px;break-after:avoid}
+.resume-document .resume-entry-title{font-weight:700;margin:0}
+.resume-document .resume-dates{font-weight:400;margin:0;font-size:.95em}
+.resume-document .resume-organization{margin:2px 0 5px}
+
 @media(max-width:600px){.resume-document{padding:24px 20px;font-size:14px}.resume-document h1{font-size:24px}}
 @media print{.resume-document{max-width:none;margin:0!important;padding:0!important;border:0!important;box-shadow:none;font-size:11pt}.resume-document h1{font-size:20pt}.resume-document h2{font-size:11pt}.resume-document p,.resume-document li{orphans:2;widows:2}@page{margin:18mm}}
 `;
 const sectionHeading = text => /^(profile|summary|professional summary|objective|education|experience|work experience|professional experience|employment|employment history|projects|selected projects|selected AI and business technology projects|skills|technical skills|technical and analytical skills|certifications|certificates|awards|volunteer experience|volunteering|activities|leadership|references)$/i.test(text.trim());
 const bullet = text => /^[•●▪‣*–-]\s+/.test(text);
-export function resumeMarkup({name='',contact='',body=''}={}){
+export function resumeMarkup({name='',contact='',body='',sections}={}){
+  if(Array.isArray(sections))return guidedMarkup({name,contact,sections});
   const lines=body.replace(/\r\n?/g,'\n').split('\n');
   let cursor=0;
   const output=[];
@@ -69,6 +75,17 @@ export function buildGuidedResume(answers={}){
   const clean=value=>typeof value==='string'?value.trim():'';
   const lines=value=>clean(value).split('\n').map(line=>line.trim()).filter(Boolean);
   const blocks=[];
+  const sections=[];
+  if(clean(answers.summary))sections.push({title:'PROFILE',entries:[{text:clean(answers.summary)}]});
+  for(const [kind,title,titleField,organizationField,textField] of [
+    ['education','EDUCATION','qualification','school','notes'],
+    ['experience','EXPERIENCE','role','organization',null],
+    ['projects','PROJECTS','title','context',null]
+  ]){
+    const entries=(answers[kind]||[]).map(item=>({title:clean(item[titleField]),organization:clean(item[organizationField]),dates:clean(item.dates),text:textField?clean(item[textField]):'',bullets:(kind==='experience'?[...lines(item.tasks),...lines(item.results)]:kind==='projects'?lines(item.contribution):[]).map(line=>line.replace(/^[•*]\s+/,''))})).filter(item=>item.title||item.organization||item.dates||item.text||item.bullets.length);
+    if(entries.length)sections.push({title,entries});
+  }
+  if(lines(answers.skills).length)sections.push({title:'SKILLS',entries:[{bullets:lines(answers.skills).map(line=>line.replace(/^[•*]\s+/,''))}]});
   if(clean(answers.summary))blocks.push('PROFILE\n'+clean(answers.summary));
   const education=(answers.education||[]).map(item=>{
     const details=[clean(item.qualification),clean(item.school),clean(item.dates),clean(item.notes)].filter(Boolean);
@@ -88,5 +105,21 @@ export function buildGuidedResume(answers={}){
   if(projects.length)blocks.push('PROJECTS\n'+projects.join('\n\n'));
   const skills=lines(answers.skills);
   if(skills.length)blocks.push('SKILLS\n'+skills.map(line=>'• '+line.replace(/^[•*]\s+/,'')).join('\n'));
-  return {name:clean(answers.name),contact:['city','email','phone','link'].map(field=>clean(answers[field])).filter(Boolean).join(' | '),body:blocks.join('\n\n')};
+  return {name:clean(answers.name),contact:['city','email','phone','link'].map(field=>clean(answers[field])).filter(Boolean).join(' | '),body:blocks.join('\n\n'),sections};
+}
+
+function guidedMarkup({name,contact,sections}){
+  const output=[];
+  if(name||contact)output.push('<header class="resume-header">'+(name?'<h1>'+escape(name)+'</h1>':'')+(contact?'<p class="resume-contact">'+escape(contact)+'</p>':'')+'</header>');
+  for(const section of sections){
+    output.push('<section><h2>'+escape(section.title)+'</h2>');
+    for(const entry of section.entries){
+      if(entry.title||entry.dates)output.push('<div class="resume-entry-heading">'+(entry.title?'<p class="resume-entry-title">'+escape(entry.title)+'</p>':'')+(entry.dates?'<p class="resume-dates">'+escape(entry.dates)+'</p>':'')+'</div>');
+      if(entry.organization)output.push('<p class="resume-organization">'+escape(entry.organization)+'</p>');
+      if(entry.text)output.push('<p>'+escape(entry.text)+'</p>');
+      if(entry.bullets?.length)output.push('<ul>'+entry.bullets.map(line=>'<li>'+escape(line)+'</li>').join('')+'</ul>');
+    }
+    output.push('</section>');
+  }
+  return output.join('\n');
 }
