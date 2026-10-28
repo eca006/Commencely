@@ -54,3 +54,10 @@ input, select, textarea { min-width: 0; max-width: 100%; box-sizing: border-box;
 .builder-navigation { display: flex; gap: 12px; margin-top: 18px; }
 #builder-next { background: #164eae; border: 1px solid #164eae; color: #fff; }
 #builder-progress { font-weight: 600; }
+
+.resume-document .resume-record { margin-bottom: 16px; }
+.resume-document .resume-record:last-child { margin-bottom: 0; }
+.resume-document [contenteditable] { border-radius: 2px; cursor: text; }
+.resume-document [contenteditable]:hover { outline: 1px dashed #999; outline-offset: 3px; }
+.resume-document [contenteditable]:focus { outline: 2px solid #164eae; outline-offset: 3px; background: #f7faff; }
+@media print { .resume-document [contenteditable] { outline: none !important; background: transparent !important; } }

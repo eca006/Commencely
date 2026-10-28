@@ -76,16 +76,16 @@ export function buildGuidedResume(answers={}){
   const lines=value=>clean(value).split('\n').map(line=>line.trim()).filter(Boolean);
   const blocks=[];
   const sections=[];
-  if(clean(answers.summary))sections.push({title:'PROFILE',entries:[{text:clean(answers.summary)}]});
+  if(clean(answers.summary))sections.push({key:'profile',title:'PROFILE',entries:[{key:0,text:clean(answers.summary)}]});
   for(const [kind,title,titleField,organizationField,textField] of [
     ['education','EDUCATION','qualification','school','notes'],
     ['experience','EXPERIENCE','role','organization',null],
     ['projects','PROJECTS','title','context',null]
   ]){
-    const entries=(answers[kind]||[]).map(item=>({title:clean(item[titleField]),organization:clean(item[organizationField]),dates:clean(item.dates),text:textField?clean(item[textField]):'',bullets:(kind==='experience'?[...lines(item.tasks),...lines(item.results)]:kind==='projects'?lines(item.contribution):[]).map(line=>line.replace(/^[•*]\s+/,''))})).filter(item=>item.title||item.organization||item.dates||item.text||item.bullets.length);
-    if(entries.length)sections.push({title,entries});
+    const entries=(answers[kind]||[]).map((item,index)=>({key:index,title:clean(item[titleField]),organization:clean(item[organizationField]),dates:clean(item.dates),text:textField?clean(item[textField]):'',bullets:(kind==='experience'?[...lines(item.tasks),...lines(item.results)]:kind==='projects'?lines(item.contribution):[]).map(line=>line.replace(/^[•*]\s+/,''))})).filter(item=>item.title||item.organization||item.dates||item.text||item.bullets.length);
+    if(entries.length)sections.push({key:kind,title,entries});
   }
-  if(lines(answers.skills).length)sections.push({title:'SKILLS',entries:[{bullets:lines(answers.skills).map(line=>line.replace(/^[•*]\s+/,''))}]});
+  if(lines(answers.skills).length)sections.push({key:'skills',title:'SKILLS',entries:[{key:0,bullets:lines(answers.skills).map(line=>line.replace(/^[•*]\s+/,''))}]});
   if(clean(answers.summary))blocks.push('PROFILE\n'+clean(answers.summary));
   const education=(answers.education||[]).map(item=>{
     const details=[clean(item.qualification),clean(item.school),clean(item.dates),clean(item.notes)].filter(Boolean);
@@ -110,16 +110,57 @@ export function buildGuidedResume(answers={}){
 
 function guidedMarkup({name,contact,sections}){
   const output=[];
-  if(name||contact)output.push('<header class="resume-header">'+(name?'<h1>'+escape(name)+'</h1>':'')+(contact?'<p class="resume-contact">'+escape(contact)+'</p>':'')+'</header>');
-  for(const section of sections){
-    output.push('<section><h2>'+escape(section.title)+'</h2>');
-    for(const entry of section.entries){
-      if(entry.title||entry.dates)output.push('<div class="resume-entry-heading">'+(entry.title?'<p class="resume-entry-title">'+escape(entry.title)+'</p>':'')+(entry.dates?'<p class="resume-dates">'+escape(entry.dates)+'</p>':'')+'</div>');
-      if(entry.organization)output.push('<p class="resume-organization">'+escape(entry.organization)+'</p>');
-      if(entry.text)output.push('<p>'+escape(entry.text)+'</p>');
-      if(entry.bullets?.length)output.push('<ul>'+entry.bullets.map(line=>'<li>'+escape(line)+'</li>').join('')+'</ul>');
-    }
+  const node=(tag,text,path,className='')=>'<'+tag+' data-resume-path="'+path+'"'+(className?' class="'+className+'"':'')+'>'+escape(text)+'</'+tag+'>';
+  if(name||contact)output.push('<header class="resume-header">'+(name?node('h1',name,'name'):'')+(contact?node('p',contact,'contact','resume-contact'):'')+'</header>');
+  sections.forEach((section,sectionIndex)=>{
+    const sectionPath='sections.'+(section.key??sectionIndex);
+    output.push('<section class="resume-section">'+node('h2',section.title,sectionPath+'.title'));
+    section.entries.forEach((entry,entryIndex)=>{
+      const path=sectionPath+'.entries.'+(entry.key??entryIndex);
+      output.push('<div class="resume-record">');
+      if(entry.title||entry.dates)output.push('<div class="resume-entry-heading">'+(entry.title?node('p',entry.title,path+'.title','resume-entry-title'):'')+(entry.dates?node('p',entry.dates,path+'.dates','resume-dates'):'')+'</div>');
+      if(entry.organization)output.push(node('p',entry.organization,path+'.organization','resume-organization'));
+      if(entry.text)output.push(node('p',entry.text,path+'.text'));
+      if(entry.bullets?.length)output.push('<ul>'+entry.bullets.map((line,index)=>node('li',line,path+'.bullets.'+index)).join('')+'</ul>');
+      output.push('</div>');
+    });
     output.push('</section>');
-  }
+  });
   return output.join('\n');
+}
+
+export function cleanResumeWording(text=''){
+  return text.split('\n').map(line=>{
+    let value=line.trim().replace(/[ \t]+/g,' ');
+    if(!value)return '';
+    value=value.replace(/^i (?:was|am) responsible for\s+/i,'Responsible for ')
+      .replace(/^i (?:was|am) in charge of\s+/i,'Handled ')
+      .replace(/^i\s+(?!(?:am|was|have|had|can|would|will|do|did|don['’]t|didn['’]t)\b)/i,'');
+    value=value.charAt(0).toUpperCase()+value.slice(1);
+    return /[.!?:;]$/.test(value)?value:value+'.';
+  }).join('\n');
+}
+export function suggestedGuidedResume(answers){
+  const copy={...answers};
+  for(const [kind,fields] of [['experience',['tasks','results']],['projects',['contribution']]])copy[kind]=(answers[kind]||[]).map(entry=>{const result={...entry};for(const field of fields)result[field]=cleanResumeWording(typeof entry[field]==='string'?entry[field]:'');return result;});
+  return buildGuidedResume(copy);
+}
+export function guidedBody(sections=[]){
+  return sections.map(section=>[section.title,...section.entries.map(entry=>[entry.title,entry.organization,entry.dates,entry.text,...(entry.bullets||[]).map(line=>'• '+line)].filter(Boolean).join('\n'))].join('\n\n')).join('\n\n');
+}
+export function applyResumeEdits(model,edits={}){
+  const result=JSON.parse(JSON.stringify(model));
+  for(const [path,text] of Object.entries(edits)){
+    if(typeof text!=='string'||text.length>5000)continue;
+    const parts=path.split('.');
+    if(parts.length===1&&['name','contact'].includes(path)){result[path]=text;continue;}
+    if(!/^sections\.(?:\d+|profile|education|experience|projects|skills)\.(title|entries\.\d+\.(title|organization|dates|text|bullets\.\d+))$/.test(path))continue;
+    const sectionIndex=/^\d+$/.test(parts[1])?Number(parts[1]):result.sections.findIndex(section=>section.key===parts[1]);
+    if(sectionIndex<0||!result.sections[sectionIndex])continue;parts[1]=String(sectionIndex);
+    if(parts[2]==='entries'){const index=result.sections[sectionIndex].entries.findIndex((entry,index)=>(entry.key??index)===Number(parts[3]));if(index<0)continue;parts[3]=String(index);}
+    let target=result;
+    for(const part of parts.slice(0,-1))target=target?.[part];
+    const key=parts.at(-1);if(target&&Object.hasOwn(target,key))target[key]=text;
+  }
+  result.body=guidedBody(result.sections);return result;
 }

@@ -1,4 +1,4 @@
-import {buildGuidedResume,resumeMarkup,resumeStyles,resumeHTML,hasResumeContent} from './resume-model.js';
+import {buildGuidedResume,resumeMarkup,resumeStyles,resumeHTML,hasResumeContent,suggestedGuidedResume,applyResumeEdits} from './resume-model.js';
 const style=document.createElement('style');style.textContent=resumeStyles;document.head.append(style);
 const form=document.querySelector('#builder-form');
 const status=document.querySelector('#builder-status');
@@ -12,6 +12,14 @@ const fields={
 let step=0;
 let rowId=0;
 let savedAnswers=null;
+let previewEdits={};
+let wordingMode='clean';
+const preview=document.querySelector('#resume-preview');
+function snapshot(){return {...answers(),_previewEdits:previewEdits,_wordingMode:wordingMode};}
+function currentResume(){return applyResumeEdits(wordingMode==='clean'?suggestedGuidedResume(answers()):buildGuidedResume(answers()),previewEdits);}
+function saveState(){const saved=JSON.stringify(snapshot())===savedAnswers;document.querySelector('#save-builder').textContent=saved?'Progress saved ✓':'Save progress on this browser';document.querySelector('#save-builder').disabled=saved;}
+function discardPreviewEdits(){if(Object.keys(previewEdits).length&&!confirm('Rebuild the preview from your answers and replace your preview edits?'))return false;previewEdits={};return true;}
+
 function addEntry(kind,values={}){
   const section=document.createElement('fieldset');section.dataset.kind=kind;
   const legend=document.createElement('legend');legend.textContent={education:'School or training',experience:'Experience',projects:'Project or activity'}[kind];section.append(legend);
@@ -22,7 +30,7 @@ function addEntry(kind,values={}){
     if(help){const note=document.createElement('p');note.className='note';note.id=id+'-help';note.textContent=help;input.setAttribute('aria-describedby',note.id);section.append(note);}
   }
   const remove=document.createElement('button');remove.type='button';remove.textContent='Remove this '+({education:'education entry',experience:'experience',projects:'project'}[kind]);
-  remove.addEventListener('click',()=>{if([...section.querySelectorAll('input,textarea')].some(input=>input.value.trim())&&!confirm('Remove this entry from your answers?'))return;section.remove();changed();});section.append(remove);
+  remove.addEventListener('click',()=>{const hasText=[...section.querySelectorAll('input,textarea')].some(input=>input.value.trim());if((hasText||Object.keys(previewEdits).length)&&!confirm('Remove this entry and rebuild the preview from your remaining answers?'))return;previewEdits={};section.remove();changed();});section.append(remove);
   document.getElementById(kind+'-entries').append(section);
 }
 function answers(){
@@ -32,13 +40,14 @@ function answers(){
   return result;
 }
 function render(){
-  const current=answers();const model=buildGuidedResume(current);
-  document.querySelector('#resume-preview').innerHTML=resumeMarkup(model);
+  const model=currentResume();
+  preview.innerHTML=resumeMarkup(model);
+  for(const node of preview.querySelectorAll('[data-resume-path]')){node.contentEditable='plaintext-only';node.setAttribute('role','textbox');node.setAttribute('aria-label','Edit '+node.textContent.slice(0,90));node.spellcheck=true;}
   document.querySelector('#resume-preview').hidden=step!==4;
   const content=hasResumeContent(model);
   for(const id of ['builder-download','builder-print','builder-edit'])document.getElementById(id).disabled=!content;
-  document.querySelector('#builder-review-status').textContent=content?'Your answers are arranged below. Nothing has been added to your experience.':'Add at least one education, experience, project, or skill detail before downloading.';
-  const saved=JSON.stringify(current)===savedAnswers;document.querySelector('#save-builder').textContent=saved?'Progress saved ✓':'Save progress on this browser';document.querySelector('#save-builder').disabled=saved;
+  document.querySelector('#builder-review-status').textContent=content?(wordingMode==='clean'?'Suggested wording is ready. Click any line in the preview to edit it.':'Your exact answers are shown. Click any line in the preview to edit it.'):'Add at least one education, experience, project, or skill detail before downloading.';
+  saveState();
 }
 function showStep(next,focus=true){
   step=next;
@@ -48,19 +57,19 @@ function showStep(next,focus=true){
   document.querySelector('#builder-next').textContent='Next: '+(steps[step+1]||'Review');render();
   if(focus){const heading=document.querySelector('[data-step="'+step+'"] h2');heading.tabIndex=-1;heading.focus();heading.scrollIntoView({behavior:'smooth'});}
 }
-function changed(){status.textContent='Changes are not saved yet. Save your progress before leaving.';render();}
-for(const button of document.querySelectorAll('[data-add]'))button.addEventListener('click',()=>{addEntry(button.dataset.add);changed();});
+function changed(){status.textContent=Object.keys(previewEdits).length?'Answers updated. Your preview edits are kept; use Rebuild wording to start again from these answers.':'Changes are not saved yet. Save your progress before leaving.';render();}
+for(const button of document.querySelectorAll('[data-add]'))button.addEventListener('click',()=>{if(!discardPreviewEdits())return;addEntry(button.dataset.add);changed();});
 form.addEventListener('submit',event=>event.preventDefault());form.addEventListener('input',changed);
 document.querySelector('#builder-next').addEventListener('click',()=>{const invalid=document.querySelector('[data-step="'+step+'"] :invalid');if(invalid){invalid.reportValidity();return;}showStep(Math.min(4,step+1));});
 document.querySelector('#builder-back').addEventListener('click',()=>showStep(Math.max(0,step-1)));
 document.querySelector('#save-builder').addEventListener('click',()=>{
-  try{const current=answers();const serialized=JSON.stringify(current);localStorage.setItem(storageKey,serialized);if(localStorage.getItem(storageKey)!==serialized)throw new Error();savedAnswers=serialized;render();status.textContent='Progress saved on this browser. You can leave and return to your answers.';}
+  try{const serialized=JSON.stringify(snapshot());localStorage.setItem(storageKey,serialized);if(localStorage.getItem(storageKey)!==serialized)throw new Error();savedAnswers=serialized;render();status.textContent='Progress saved on this browser. You can leave and return to your answers.';}
   catch{status.textContent='Could not save progress in this browser. Keep this page open and download your resume when ready.';}
 });
-document.querySelector('#builder-download').addEventListener('click',()=>{const url=URL.createObjectURL(new Blob([resumeHTML(buildGuidedResume(answers()))],{type:'text/html;charset=utf-8'}));const link=document.createElement('a');link.href=url;link.download='Commencely-resume.html';document.body.append(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);status.textContent='Download requested. Check your browser downloads.';});
+document.querySelector('#builder-download').addEventListener('click',()=>{const url=URL.createObjectURL(new Blob([resumeHTML(currentResume())],{type:'text/html;charset=utf-8'}));const link=document.createElement('a');link.href=url;link.download='Commencely-resume.html';document.body.append(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);status.textContent='Download requested. Check your browser downloads.';});
 document.querySelector('#builder-print').addEventListener('click',()=>window.print());
 document.querySelector('#builder-edit').addEventListener('click',()=>{
-  const key='commencely-builder-edit-v1';const model=buildGuidedResume(answers());
+  const key='commencely-builder-edit-v1';const model=currentResume();
   try{const previous=localStorage.getItem(key);if(previous&&previous!==JSON.stringify(model)&&!confirm('Replace your previous full-text builder copy with these answers?'))return;localStorage.setItem(key,JSON.stringify(model));location.href='/resume/edit?builder=1';}
   catch{status.textContent='Could not open a saved text copy. You can download your resume here instead.';}
 });
@@ -69,6 +78,20 @@ try{saved=JSON.parse(localStorage.getItem(storageKey));}catch{}
 if(saved&&typeof saved==='object'&&!Array.isArray(saved)){
   for(const name of ['name','city','email','phone','link','summary','skills'])if(typeof saved[name]==='string')form.elements[name].value=saved[name];
   for(const kind of Object.keys(fields)){const entries=Array.isArray(saved[kind])?saved[kind].filter(entry=>entry&&typeof entry==='object').slice(0,30):[{}];for(const entry of entries)addEntry(kind,entry);}
-  savedAnswers=JSON.stringify(answers());status.textContent='Your saved answers are ready. Continue through the steps to review your resume.';
+  if(saved._previewEdits&&typeof saved._previewEdits==='object'&&!Array.isArray(saved._previewEdits))previewEdits=saved._previewEdits;
+  wordingMode=saved._wordingMode==='exact'?'exact':'clean';
+  savedAnswers=JSON.stringify(snapshot());status.textContent='Your saved answers are ready. Continue through the steps to review your resume.';
 }else for(const kind of Object.keys(fields))addEntry(kind);
+preview.addEventListener('input',event=>{
+  const node=event.target.closest('[data-resume-path]');if(!node)return;
+  previewEdits[node.dataset.resumePath]=node.innerText.trim();
+  status.textContent='Preview changes are not saved yet. Save progress to keep your wording.';saveState();
+});
+preview.addEventListener('paste',event=>{
+  const node=event.target.closest('[data-resume-path]');if(!node)return;
+  event.preventDefault();document.execCommand('insertText',false,event.clipboardData.getData('text/plain'));
+});
+preview.addEventListener('drop',event=>event.preventDefault());
+document.querySelector('#rebuild-wording').addEventListener('click',()=>{if(!discardPreviewEdits())return;wordingMode='clean';render();status.textContent='Rebuilt suggested wording from your answers. Review it and edit any line.';});
+document.querySelector('#exact-wording').addEventListener('click',()=>{if(!discardPreviewEdits())return;wordingMode='exact';render();status.textContent='Showing your exact answers. Preview text is still editable.';});
 showStep(0,false);

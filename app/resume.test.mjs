@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {resumeText,resumeHTML,hasResumeContent,blankTemplate,validateResumeFile,resumeMarkup,buildGuidedResume} from './public/resume-model.js';
+import {resumeText,resumeHTML,hasResumeContent,blankTemplate,validateResumeFile,resumeMarkup,buildGuidedResume,cleanResumeWording,suggestedGuidedResume,applyResumeEdits} from './public/resume-model.js';
 test('exports only provided facts and keeps multiline text',()=>{
   const model={name:'Jordan Sample',contact:'jordan@example.test',body:'EXPERIENCE\nCampus desk assistant\nAnswered visitor questions.'};
   assert.equal(resumeText(model),'Jordan Sample\n\njordan@example.test\n\nEXPERIENCE\nCampus desk assistant\nAnswered visitor questions.');
@@ -45,10 +45,31 @@ test('guided dates remain plain metadata beside each role, course, and project',
   const model=buildGuidedResume({name:'Jordan',education:[{qualification:'Business course',school:'Example School',dates:'Expected 2027'}],experience:[{role:'Volunteer',organization:'Community club',dates:'May 2024 – Present',tasks:'Welcomed visitors'}],projects:[{title:'Class project',dates:'Spring 2026',contribution:'Made a spreadsheet'}]});
   for(const html of [resumeMarkup(model),resumeHTML(model)]){
     for(const date of ['Expected 2027','May 2024 – Present','Spring 2026']){
-      assert.ok(html.includes('<p class="resume-dates">'+date+'</p>'));
+      assert.ok(new RegExp('<p[^>]*class="resume-dates"[^>]*>'+date+'</p>').test(html));
       assert.ok(!html.includes('<h2>'+date));assert.ok(!html.includes('<p class="resume-entry">'+date));
     }
-    assert.ok(html.includes('<p class="resume-entry-title">Volunteer</p>'));
-    assert.ok(html.includes('<p class="resume-organization">Community club</p>'));
+    assert.match(html,/<p[^>]*class="resume-entry-title"[^>]*>Volunteer<\/p>/);
+    assert.match(html,/<p[^>]*class="resume-organization"[^>]*>Community club<\/p>/);
   }
+});
+
+test('wording suggestions clean supplied duties without adding metrics or removing negation',()=>{
+  assert.equal(cleanResumeWording('i helped customers\ni used Excel 2 days a week'),'Helped customers.\nUsed Excel 2 days a week.');
+  assert.equal(cleanResumeWording('I did not manage staff'),'I did not manage staff.');
+  const model=suggestedGuidedResume({experience:[{role:'Volunteer',tasks:'i organized supplies',results:''}]});
+  assert.deepEqual(model.sections[0].entries[0].bullets,['Organized supplies.']);assert.ok(!/\d/.test(model.body));
+});
+test('preview edits replace generated wording in HTML and editable text without accepting arbitrary object paths',()=>{
+  const model=suggestedGuidedResume({experience:[{role:'Volunteer',dates:'2024',tasks:'i helped visitors'}]});
+  const edited=applyResumeEdits(model,{'sections.0.entries.0.bullets.0':'Answered visitor questions.','__proto__.polluted':'bad'});
+  assert.match(edited.body,/Answered visitor questions/);assert.ok(!edited.body.includes('Helped visitors'));
+  assert.ok(resumeHTML(edited).includes('Answered visitor questions.'));assert.equal({}.polluted,undefined);
+  assert.equal(model.sections[0].entries[0].bullets[0],'Helped visitors.');
+});
+
+test('preview edits stay with their original section and entry when blank entries disappear',()=>{
+  const answers={education:[{}],experience:[{}, {role:'Volunteer',tasks:'i helped visitors'}]};
+  const model=suggestedGuidedResume(answers);
+  const edited=applyResumeEdits(model,{'sections.education.entries.0.title':'Wrong target','sections.experience.entries.0.title':'Wrong entry','sections.experience.entries.1.bullets.0':'Welcomed visitors.'});
+  assert.ok(!edited.body.includes('Wrong'));assert.ok(edited.body.includes('Welcomed visitors.'));
 });
