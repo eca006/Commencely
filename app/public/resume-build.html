@@ -37,6 +37,12 @@
 <p>We’ve arranged your answers and lightly cleaned up task and project wording. Check every statement. Click any text in the preview to edit it directly. Save progress to keep your edits.</p>
 <button id="rebuild-wording" type="button">Rebuild wording from my answers</button>
 <button id="exact-wording" type="button">Use my exact answers</button>
+<p id="wording-feedback" role="status" aria-live="polite"></p>
+<div id="wording-confirmation" hidden>
+<p>You have edits in the preview. Rebuilding will replace them with wording from your answers.</p>
+<button id="confirm-wording" type="button">Replace preview wording</button>
+<button id="cancel-wording" type="button">Keep my edits</button>
+</div>
 <p id="builder-review-status" role="status"></p>
 <div id="resume-downloads">
 <button id="builder-download" type="button">Download formatted resume (.html)</button>

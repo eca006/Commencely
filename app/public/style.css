@@ -61,3 +61,6 @@ input, select, textarea { min-width: 0; max-width: 100%; box-sizing: border-box;
 .resume-document [contenteditable]:hover { outline: 1px dashed #999; outline-offset: 3px; }
 .resume-document [contenteditable]:focus { outline: 2px solid #164eae; outline-offset: 3px; background: #f7faff; }
 @media print { .resume-document [contenteditable] { outline: none !important; background: transparent !important; } }
+
+#wording-feedback:not(:empty), #wording-confirmation { border-left: 3px solid #164eae; padding: 12px 16px; background: #f5f8fc; margin: 12px 0; }
+#wording-confirmation p { margin-top: 0; }

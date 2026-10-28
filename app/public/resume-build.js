@@ -1,4 +1,4 @@
-import {buildGuidedResume,resumeMarkup,resumeStyles,resumeHTML,hasResumeContent,suggestedGuidedResume,applyResumeEdits} from './resume-model.js';
+import {buildGuidedResume,resumeText,resumeMarkup,resumeStyles,resumeHTML,hasResumeContent,suggestedGuidedResume,applyResumeEdits} from './resume-model.js';
 const style=document.createElement('style');style.textContent=resumeStyles;document.head.append(style);
 const form=document.querySelector('#builder-form');
 const status=document.querySelector('#builder-status');
@@ -92,6 +92,29 @@ preview.addEventListener('paste',event=>{
   event.preventDefault();document.execCommand('insertText',false,event.clipboardData.getData('text/plain'));
 });
 preview.addEventListener('drop',event=>event.preventDefault());
-document.querySelector('#rebuild-wording').addEventListener('click',()=>{if(!discardPreviewEdits())return;wordingMode='clean';render();status.textContent='Rebuilt suggested wording from your answers. Review it and edit any line.';});
-document.querySelector('#exact-wording').addEventListener('click',()=>{if(!discardPreviewEdits())return;wordingMode='exact';render();status.textContent='Showing your exact answers. Preview text is still editable.';});
+let pendingWording=null;
+const wordingFeedback=document.querySelector('#wording-feedback');
+const wordingConfirmation=document.querySelector('#wording-confirmation');
+function feedback(message){wordingFeedback.textContent=message;wordingFeedback.scrollIntoView({block:'nearest',behavior:'smooth'});}
+function wordingCandidate(mode){return applyResumeEdits(mode==='clean'?suggestedGuidedResume(answers()):buildGuidedResume(answers()),{});}
+function applyWording(mode){
+  const before=resumeText(currentResume());
+  previewEdits={};wordingMode=mode;pendingWording=null;wordingConfirmation.hidden=true;
+  render();
+  const changed=resumeText(currentResume())!==before;
+  const message=changed?(mode==='clean'?'Updated the wording below from your answers. You can still click any line to edit it.':'Your exact answers are now shown below.'):(mode==='clean'?'The preview already uses the suggested wording. There are no further changes from the basic wording cleanup. You can edit any preview line or choose Use my exact answers.':'The preview already matches your exact answers.');
+  feedback(message);status.textContent=message;
+}
+function requestWording(mode){
+  pendingWording=null;wordingConfirmation.hidden=true;
+  if(Object.keys(previewEdits).length&&resumeText(currentResume())!==resumeText(wordingCandidate(mode))){
+    pendingWording=mode;wordingConfirmation.hidden=false;
+    feedback('Choose Replace preview wording below to rebuild, or Keep my edits.');return;
+  }
+  applyWording(mode);
+}
+document.querySelector('#rebuild-wording').addEventListener('click',()=>requestWording('clean'));
+document.querySelector('#exact-wording').addEventListener('click',()=>requestWording('exact'));
+document.querySelector('#confirm-wording').addEventListener('click',()=>{if(pendingWording)applyWording(pendingWording);});
+document.querySelector('#cancel-wording').addEventListener('click',()=>{pendingWording=null;wordingConfirmation.hidden=true;feedback('Your preview edits were kept. Nothing was replaced.');});
 showStep(0,false);
