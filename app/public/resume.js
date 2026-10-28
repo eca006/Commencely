@@ -27,6 +27,7 @@ async function originalStorage(action,value){
   });}finally{db.close();}
 }
 function showEditable(show){
+  show=false;
   editingCopy=show;
   document.querySelector('#editable-controls').hidden=!show;
   document.querySelector('#resume-preview').hidden=!show;
@@ -72,6 +73,7 @@ function showOriginal(file,message){
   document.querySelector('#original-word-note').hidden=!/\.docx$/i.test(file.name);
   document.querySelector('#download-original').href=originalURL;document.querySelector('#download-original').download=file.name;
   document.querySelector('#builder-entry').hidden=true;
+  document.querySelector('#create-resume-link').hidden=true;
   document.querySelector('#selected-resume').hidden=true;
   document.querySelector('#choose-resume').textContent='Replace resume';
   showEditable(false);
@@ -142,7 +144,7 @@ document.querySelector('#clear-resume').addEventListener('click',async()=>{
   try{await originalStorage('delete');}catch{status.textContent='Text draft cleared, but the original file could not be removed from browser storage. Remove site data in browser settings to clear it.';}
   originalFile=null;if(originalURL)URL.revokeObjectURL(originalURL);originalURL=null;
   pdfPreviewVersion++;document.querySelector('#original-pdf').replaceChildren();
-  document.querySelector('#original-resume').hidden=true;document.querySelector('#toggle-editable').hidden=true;document.querySelector('#builder-entry').hidden=false;document.querySelector('#selected-resume').hidden=false;document.querySelector('#choose-resume').textContent='Add my resume';showEditable(true);
+  document.querySelector('#original-resume').hidden=true;document.querySelector('#toggle-editable').hidden=true;document.querySelector('#builder-entry').hidden=true;document.querySelector('#create-resume-link').hidden=false;document.querySelector('#selected-resume').hidden=false;document.querySelector('#choose-resume').textContent='Add my resume';showEditable(true);
   savedDraftText=null;importedFilename='';form.reset();fileInput.value='';importStatus.textContent='';render();
 });
 document.querySelector('#remove-original').addEventListener('click',()=>document.querySelector('#clear-resume').click());
@@ -167,3 +169,5 @@ document.querySelector('#download-resume').addEventListener('click',()=>download
 document.querySelector('#download-html').addEventListener('click',()=>download(resumeHTML(model()),'text/html;charset=utf-8','Commencely-resume.html'));
 document.querySelector('#print-resume').addEventListener('click',()=>window.print());
 render();
+
+showEditable(false);

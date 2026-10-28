@@ -41,3 +41,6 @@ input, select, textarea { min-width: 0; max-width: 100%; box-sizing: border-box;
 #original-pdf canvas { display: block; width: 100%; height: auto; background: #fff; margin: 0 auto 12px; }
 
 #download-original { display: inline-block; padding: 10px 14px; text-decoration: none; cursor: pointer; }
+
+.resume-edit-link { display: inline-block; padding: 10px 14px; margin: 0 8px; border: 1px solid #777; border-radius: 5px; }
+#editor-form { max-width: none; }

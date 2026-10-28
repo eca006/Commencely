@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Commencely — Edit resume</title><link rel="stylesheet" href="/style.css"></head>
+<body><main>
+<div class="resume-tools">
+<p><a href="/resume">← Back to my resume</a></p>
+<h1>Edit resume</h1>
+<p>Make changes here and save an edited version. Your uploaded original stays unchanged. Check the new layout before downloading.</p>
+<p id="editor-status" role="status">Opening your resume…</p>
+<form id="editor-form" inert>
+<label for="editor-name">Name (optional)</label><input id="editor-name" name="name" maxlength="150" autocomplete="off">
+<label for="editor-contact">Contact details (optional)</label><input id="editor-contact" name="contact" maxlength="500" autocomplete="off">
+<label for="editor-body">Resume text</label><textarea id="editor-body" name="body" rows="22" maxlength="50000"></textarea>
+</form>
+<p id="editor-note">Your preview updates as you type. Use only your real experience and qualifications.</p>
+<button id="save-edited" type="button" disabled>Save edited version</button>
+<section id="resume-downloads" aria-label="Download edited resume">
+<button id="editor-txt" type="button" disabled>Download edited text (.txt)</button>
+<button id="editor-html" type="button" disabled>Download formatted version (.html)</button>
+<button id="editor-print" type="button" disabled>Print / Save as PDF</button>
+</section>
+<h2>Edited preview</h2>
+</div>
+<article id="resume-preview" class="resume-document" aria-label="Edited resume preview"></article>
+</main><script type="module" src="/resume-edit.js"></script></body></html>
