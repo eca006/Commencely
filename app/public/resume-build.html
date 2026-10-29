@@ -1,7 +1,18 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Commencely — Build a resume</title><link rel="stylesheet" href="/style.css"></head>
 <body class="builder-page">
-<header class="builder-topbar resume-tools"><a class="builder-brand" href="/">Commencely</a><span>Resume builder</span><div><button type="button" id="top-download">Download PDF</button><a href="/resume">My resume</a></div></header>
+<div id="builder-start" class="resume-tools">
+<header class="entry-header"><a href="/">Commencely</a><a href="/resume">My resume</a></header>
+<section id="builder-intro" class="builder-stage"><h1>Build a resume, one step at a time</h1><p>Choose a template, add your details, then download your resume.</p>
+<div class="intro-cards"><div><h2>1. Pick a template</h2><p>Compare layouts and choose what works for your experience.</p></div><div><h2>2. Add your content</h2><p>Follow the prompts and get editable wording suggestions.</p></div><div><h2>3. Download and send</h2><p>Review your details and save a PDF or text copy.</p></div></div>
+<button id="intro-continue" type="button">Continue to templates</button><p><a href="/resume">Import or view an existing resume</a></p></section>
+<section id="template-picker" class="builder-stage" hidden><h1>Choose your resume template</h1><p>Each layout uses the same sample content. You can change templates without losing your answers.</p><button id="open-recommendations" type="button">Help me choose</button>
+<div class="template-filters"><label>Headshot<select id="filter-photo"><option value="">Any</option><option value="true">With photo</option><option value="false">Without photo</option></select></label><label>Graphics<select id="filter-graphics"><option value="">Any</option><option value="true">With section rules</option><option value="false">Without section rules</option></select></label><label>Columns<select id="filter-columns"><option value="">Any</option><option value="1">1 column</option><option value="2">2 columns</option></select></label><div><span>Colors</span><div id="picker-colors" class="color-options"></div></div></div>
+<div id="active-template-filters"></div><p id="template-count" role="status"></p><div id="template-grid"></div><button id="picker-back" type="button">Back</button></section>
+<section id="build-choice" class="builder-stage" hidden><h1>How do you want to build?</h1><div class="build-choices"><label><input type="radio" name="build-mode" value="new" checked>Create a new resume<p>Build section by section. Your saved answers are kept.</p></label><label><input type="radio" name="build-mode" value="import">I already have a resume<p>Import text into this template and review each section.</p></label></div><p class="note">Your original file stays unchanged. Imported text will use your chosen template, so review its formatting.</p><div id="import-options" hidden><label for="builder-import-file">Choose a PDF, Word (.docx), or text file, up to 5 MB</label><input id="builder-import-file" type="file" accept=".pdf,.docx,.txt"><p id="import-status" role="status"></p><label for="import-review">Review extracted text before continuing</label><textarea id="import-review" rows="10" maxlength="50000"></textarea><label class="import-replace"><input type="checkbox" id="replace-import">Replace my current builder sections with this imported text</label><p class="note">Scanned image-only PDFs need selectable text. You can paste the text here instead.</p></div><button id="choice-back" type="button">Back</button><button id="choice-continue" type="button">Continue</button></section>
+</div>
+<div id="wizard-shell" hidden>
+<header class="builder-topbar resume-tools"><a class="builder-brand" href="/">Commencely</a><span>Resume builder</span><p id="builder-status" role="status">Progress saves in this browser.</p><div><button id="save-builder" type="button">Save now</button><button type="button" id="top-preview">Preview</button><button type="button" id="top-download">Download PDF</button><a href="/resume">My resume</a></div></header>
 <main class="builder-workspace">
 <aside class="builder-sidebar resume-tools"><h2>Sections</h2>
 <nav id="builder-sections" aria-label="Resume sections"></nav>
@@ -9,40 +20,51 @@
 <a href="/support">Find local career support</a></aside>
 <div class="builder-editor">
 <div class="resume-tools">
-<div class="editor-heading"><h1>Build your resume</h1><p>Complete each section, then review and download.</p></div><p id="builder-progress" role="status">Step 1 of 5 · About you</p>
-<p id="builder-status" role="status">Your progress is not saved yet.</p>
-<button id="save-builder" type="button">Save now</button><p class="note">Progress saves automatically in this browser.</p>
+<div class="editor-heading"><h1 id="step-heading">Let’s start with your header</h1><p id="step-description">Include your name and ways for employers to reach you.</p></div><p id="builder-progress" role="status">Step 1 of 7 · Header</p>
+
 <form id="builder-form">
 <section data-step="0" aria-labelledby="about-title"><h2 id="about-title">About you</h2>
 <p>How should an employer contact you? A street address isn’t needed. Leave out any contact detail you don’t want to share.</p>
-<label for="builder-name">Your name</label><input id="builder-name" name="name" required maxlength="150" autocomplete="name">
-<label for="builder-city">City and state (optional)</label><input id="builder-city" name="city" maxlength="150">
-<label for="builder-email">Email (optional)</label><input id="builder-email" name="email" type="email" maxlength="200" autocomplete="email">
-<label for="builder-phone">Phone (optional)</label><input id="builder-phone" name="phone" type="tel" placeholder="479-555-0123" maxlength="80" autocomplete="tel">
-<label for="builder-link">Portfolio or professional profile link (optional)</label><input id="builder-link" name="link" maxlength="300">
-<label for="builder-summary">What kind of work are you looking for, and what can you bring? (optional)</label><textarea id="builder-summary" name="summary" rows="3" maxlength="1500" aria-describedby="summary-help"></textarea>
-<p id="summary-help" class="note">You can mention what you’re studying, a skill you’ve practiced, or work you want to learn. Skip this if you’re unsure.</p>
+<div class="header-fields">
+<div><label for="builder-first">First name</label><input id="builder-first" name="firstName" required maxlength="100" autocomplete="given-name"></div>
+<div><label for="builder-last">Last name</label><input id="builder-last" name="lastName" maxlength="100" autocomplete="family-name"></div>
+<div><label for="builder-city">City (optional)</label><input id="builder-city" name="city" maxlength="150" autocomplete="address-level2"></div>
+<div><label for="builder-state">State (optional)</label><input id="builder-state" name="state" maxlength="80" autocomplete="address-level1" list="state-options"><datalist id="state-options"><option>AR</option><option>OK</option><option>MO</option><option>KS</option><option>TX</option><option>Other</option></datalist></div>
+<div><label for="builder-zip">ZIP code (optional)</label><input id="builder-zip" name="zip" maxlength="20" autocomplete="postal-code"></div>
+<div><label for="builder-phone">Phone (optional)</label><input id="builder-phone" name="phone" type="tel" placeholder="479-555-0123" maxlength="80" autocomplete="tel"></div>
+<div class="full-width"><label for="builder-email">Email</label><input id="builder-email" name="email" required type="email" maxlength="200" autocomplete="email"></div>
+</div>
+<div id="photo-field" hidden><label for="builder-photo">Photo (optional, JPG or PNG, up to 300 KB)</label><input id="builder-photo" type="file" accept="image/jpeg,image/png"><button id="remove-photo" type="button">Remove photo</button><p id="photo-status" role="status"></p></div>
 </section>
-<section data-step="1" hidden aria-labelledby="education-title"><h2 id="education-title">Education and training</h2>
+<section data-step="2" hidden aria-labelledby="education-title"><h2 id="education-title">Education and training</h2>
 <p>What school, course, certificate, or training have you attended? Include something you’re still working toward and say when you expect to finish. You can skip this step.</p>
-<div id="education-entries"></div><button data-add="education" type="button">Add another school or course</button>
+<h3>What’s your level of education?</h3><div id="education-choices" aria-label="Education level"></div><div id="education-entries"></div><button data-add="education" type="button">Add another school or course</button>
 </section>
-<section data-step="2" hidden aria-labelledby="experience-title"><h2 id="experience-title">Experience</h2>
+<section data-step="1" hidden aria-labelledby="experience-title"><h2 id="experience-title">Experience</h2>
 <p>Think beyond paid jobs. Have you volunteered, helped a family business, organized an event, cared for someone, or held a campus role? Describe your own role and what you contributed.</p>
 <p>No experience to add yet? Leave this blank and go to the next step.</p>
 <div id="experience-entries"></div><button data-add="experience" type="button">Add another experience</button>
 </section>
-<section data-step="3" hidden aria-labelledby="skills-title"><h2 id="skills-title">Projects and skills</h2>
-<p>A class assignment, personal project, club activity, or community project can show what you’ve practiced. Focus on your own contribution. Skip anything you don’t have yet.</p>
-<div id="projects-entries"></div><button data-add="projects" type="button">Add another project</button>
-<label for="builder-skills">What tools, languages, or practical skills can you use?</label><textarea id="builder-skills" name="skills" rows="5" maxlength="4000" aria-describedby="skills-help"></textarea>
-<p id="skills-help" class="note">Write one skill per line. Think about software you’ve used, a language you speak, equipment you can operate, or a task you can demonstrate. Add your level when helpful, such as “Excel — basic.”</p>
-<details class="extra-sections"><summary>Add certifications, languages, or awards</summary>
-<label for="builder-certifications">Certifications (one per line)</label><textarea name="certifications" id="builder-certifications" rows="3" maxlength="4000" placeholder="Certificate name — issuer, year"></textarea>
-<label for="builder-languages">Languages (one per line)</label><textarea name="languages" id="builder-languages" rows="3" maxlength="4000" placeholder="Language — your proficiency"></textarea>
-<label for="builder-awards">Awards or activities (one per line)</label><textarea name="awards" id="builder-awards" rows="3" maxlength="4000" placeholder="Award or activity — organization, year"></textarea>
-</details></section>
-<section data-step="4" hidden aria-labelledby="review-title"><h2 id="review-title">Review your resume</h2>
+<section data-step="3" hidden aria-labelledby="skills-title"><h2 id="skills-title">Skills</h2>
+<p>Select skills you can demonstrate, or write your own. Six to eight relevant skills is a useful starting point.</p>
+<div class="suggestion-workspace"><div class="suggestion-library"><label for="skill-search">Search skills or job title</label><input id="skill-search" placeholder="For example: cashier, office, Excel"><div id="skill-suggestions"></div><p id="skill-search-status" class="note" role="status"></p></div>
+<div><label for="builder-skills">Your skills (one per line)</label><textarea id="builder-skills" name="skills" rows="12" maxlength="4000" aria-describedby="skills-help"></textarea><p id="skills-help" class="note">Add only skills you have. Include your level when helpful.</p><button type="button" id="polish-skills">Fix spelling and capitalization</button></div></div>
+</section>
+<section data-step="4" hidden aria-labelledby="summary-title"><h2 id="summary-title">Summary</h2><p>Start with an option based on the details you’ve entered, or write your own. You can skip this section.</p>
+<div class="suggestion-workspace"><div><h3>Options from your answers</h3><button id="refresh-summaries" type="button">Refresh suggestions</button><div id="summary-suggestions"></div><p class="note">Suggestions use only your entries. Check the wording before adding it.</p></div>
+<div><label for="builder-summary">Your summary</label><textarea id="builder-summary" name="summary" rows="10" maxlength="1500"></textarea><button id="polish-summary" type="button">Improve wording</button><button id="undo-summary" type="button" hidden>Undo summary change</button></div></div><p id="summary-status" role="status"></p></section>
+<section data-step="5" hidden aria-labelledby="extras-title"><h2 id="extras-title">Additional details</h2><p>Choose anything else you want to highlight. These sections are optional.</p><div id="additional-options"></div>
+<div data-extra="customText" hidden><label for="builder-customTitle">Custom section title</label><input name="customTitle" id="builder-customTitle" maxlength="100"><label for="builder-customText">Custom section content (one item per line)</label><textarea name="customText" id="builder-customText" rows="5" maxlength="4000"></textarea></div>
+<div data-extra="importedText" hidden><label for="builder-importedText">Other imported details (review and move into the appropriate fields)</label><textarea id="builder-importedText" name="importedText" rows="8" maxlength="50000"></textarea></div>
+<div data-extra="projects" hidden><h3>Projects</h3><div id="projects-entries"></div><button data-add="projects" type="button">Add another project</button></div>
+<div data-extra="certifications" hidden><label for="builder-certifications">Certifications and licenses (one per line)</label><textarea name="certifications" id="builder-certifications" rows="3" maxlength="4000" placeholder="Certificate name — issuer, year"></textarea></div>
+<div data-extra="languages" hidden><label for="builder-languages">Languages (one per line)</label><textarea name="languages" id="builder-languages" rows="3" maxlength="4000" placeholder="Language — your proficiency"></textarea></div>
+<div data-extra="awards" hidden><label for="builder-awards">Awards and honors (one per line)</label><textarea name="awards" id="builder-awards" rows="3" maxlength="4000"></textarea></div>
+<div data-extra="activities" hidden><label for="builder-activities">Activities (one per line)</label><textarea name="activities" id="builder-activities" rows="3" maxlength="4000"></textarea></div>
+<div data-extra="link" hidden><label for="builder-link">Website or professional profile link</label><input id="builder-link" name="link" maxlength="300"></div>
+<div data-extra="references" hidden><label for="builder-references">References (optional, one per line)</label><textarea name="references" id="builder-references" rows="3" maxlength="4000"></textarea><p class="note">Usually supplied separately when requested. Get permission before listing someone’s contact details.</p></div>
+</section>
+<section data-step="6" hidden aria-labelledby="review-title"><h2 id="review-title">Review your resume</h2>
 <p>We’ve arranged your answers, improved common task descriptions, and corrected common grammar, punctuation, and capitalization errors. Check every statement. Click any text in the preview to edit it directly. Save progress to keep your edits.</p>
 <button id="rebuild-wording" type="button">Rebuild wording from my answers</button>
 <button id="undo-wording" type="button" hidden>Undo last wording change</button>
@@ -54,20 +76,28 @@
 <button id="cancel-wording" type="button">Keep my edits</button>
 </div>
 <p id="builder-review-status" role="status"></p>
+<details id="finish-settings"><summary>Font, text size, spacing, and margins</summary><label>Font<select id="finish-font"><option value="classic">Serif</option><option value="modern">Sans serif</option></select></label><label>Text size<select id="finish-size"><option value="small">Small</option><option value="standard" selected>Standard</option><option value="large">Large</option></select></label><label>Spacing<select id="finish-spacing"><option value="tight">Tight</option><option value="normal" selected>Normal</option><option value="relaxed">Relaxed</option></select></label><label>Margins<select id="finish-margins"><option value="standard">Standard</option><option value="narrow">Narrow</option><option value="wide">Wide</option></select></label></details>
 <div id="resume-downloads">
 <button id="builder-pdf" type="button">Download PDF</button>
+<button id="builder-word" type="button">Download Word (.docx)</button>
+<button id="builder-text" type="button">Download text (.txt)</button>
 <button id="builder-download" type="button">Download formatted resume (.html)</button>
 <button id="builder-print" type="button">Print / Save as PDF</button>
 <button id="builder-edit" type="button">Open full-text editor</button>
 </div>
 </section>
-<div class="builder-navigation"><button id="builder-back" type="button">Back</button><button id="builder-next" type="button">Next: Education</button></div>
+<div class="builder-navigation"><button id="builder-back" type="button">Back</button><button id="show-tips" type="button">Tips and fixes</button><button id="builder-next" type="button">Continue</button></div>
 </form></div></div>
 <aside class="builder-preview-panel" aria-label="Live resume preview">
 <div class="preview-controls resume-tools"><div><h2>Live preview</h2><span>Click a line to edit your wording</span></div>
 <details id="design-options"><summary>Organize sections</summary>
 <h3>Sections</h3><p class="note">Hide or reorder sections without deleting your answers.</p><div id="layout-sections"></div>
 </details></div>
+<button id="change-template" type="button">Change template</button><button id="zoom-preview" class="resume-tools" type="button">Enlarge preview</button>
 <article id="resume-preview" class="resume-document" aria-label="Resume preview"></article>
 <p class="preview-footnote resume-tools">Your information stays in this browser. PDF downloads can continue onto additional pages.</p>
-</aside></main><script src="/vendor/jspdf.js"></script><script type="module" src="/resume-build.js"></script></body></html>
+</aside></main></div>
+<dialog id="preview-dialog" aria-labelledby="preview-dialog-title"><div class="dialog-actions"><h2 id="preview-dialog-title">Your resume</h2><button type="button" id="close-preview">Close preview</button></div><div class="preview-zoom-controls"><button id="zoom-out" type="button">Zoom out</button><button id="zoom-reset" type="button">Reset zoom</button><button id="zoom-in" type="button">Zoom in</button><span id="zoom-value">100%</span></div><div id="large-preview" class="resume-document"></div></dialog>
+<dialog id="tips-dialog" aria-labelledby="tips-title"><h2 id="tips-title">Tips and fixes</h2><ul id="detailed-tips"></ul><button id="close-tips" type="button">Back to resume</button></dialog><dialog id="recommendation-dialog" aria-labelledby="recommendation-title"><button id="close-recommendations" type="button">Close</button><h2 id="recommendation-title">Find a layout that works for you</h2><p id="recommendation-progress"></p><div id="recommendation-content"></div><button id="recommendation-back" type="button">Back</button><button id="recommendation-next" type="button">Next</button><button id="recommendation-skip" type="button">Skip recommendations</button></dialog>
+<dialog id="template-dialog" aria-labelledby="template-dialog-title"><div class="dialog-actions"><button id="template-previous" type="button">Previous</button><span id="template-position"></span><button id="template-next" type="button">Next</button><button id="close-template-preview" type="button">Close</button></div><div class="template-dialog-grid"><div id="template-large" class="resume-document"></div><div><p id="template-tags"></p><h2 id="template-dialog-title"></h2><ul id="template-details"></ul><div id="modal-colors" class="color-options"></div><button id="use-template" type="button">Use this template</button><p>Switch layouts anytime. Your text stays editable.</p><p>Guided prompts, writing help, local saving, and PDF or text downloads.</p></div></div></dialog>
+<script src="/vendor/jspdf.js"></script><script type="module" src="/resume-build.js"></script></body></html>

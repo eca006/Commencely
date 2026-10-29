@@ -103,5 +103,5 @@ test('layout controls reorder and hide sections without altering saved source co
   const source=buildGuidedResume({education:[{school:'Example School'}],experience:[{role:'Volunteer'}],certifications:'First aid — 2025',languages:'Spanish — conversational',awards:'Community award'});
   const arranged=arrangeResume(source,{order:['experience','education'],hidden:['languages']},{template:'modern',size:'large'});
   assert.equal(arranged.sections[0].key,'experience');assert.ok(!arranged.body.includes('Spanish'));assert.ok(source.body.includes('Spanish'));
-  assert.ok(arranged.body.includes('First aid — 2025'));assert.ok(resumeHTML(arranged).includes('template-modern size-large'));assert.equal(resumeDesignClasses({template:'<script>'}),'template-classic size-standard spacing-normal');
+  assert.ok(arranged.body.includes('First aid — 2025'));assert.ok(resumeHTML(arranged).includes('template-modern size-large'));assert.equal(resumeDesignClasses({template:'<script>'}),'template-classic size-standard spacing-normal color-default no-rules margins-standard');
 });

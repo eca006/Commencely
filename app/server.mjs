@@ -4,8 +4,9 @@ import { normalizeJobs } from './jobs.mjs';
 import { directionSearch, filterDirection } from './search.mjs';
 import { getEmployerJobs } from './employer-jobs.mjs';
 
-const files = { '/resume-pdf.js':['resume-pdf.js','text/javascript'], '/resume/build': ['resume-build.html','text/html'], '/resume-build.js': ['resume-build.js','text/javascript'], '/resume/edit': ['resume-edit.html', 'text/html'], '/resume-edit.js': ['resume-edit.js', 'text/javascript'], '/support': ['support.html', 'text/html'], '/': ['index.html', 'text/html'], '/client.js': ['client.js', 'text/javascript'], '/careers.js': ['careers.js', 'text/javascript'], '/style.css': ['style.css', 'text/css'], '/resume': ['resume.html','text/html'], '/resume.js':['resume.js','text/javascript'], '/resume-model.js':['resume-model.js','text/javascript'] };
+const files = { '/resume-word.js':['resume-word.js','text/javascript'], '/resume-templates.js':['resume-templates.js','text/javascript'], '/resume-picker.js':['resume-picker.js','text/javascript'], '/resume-import.js':['resume-import.js','text/javascript'], '/resume-guidance.js':['resume-guidance.js','text/javascript'], '/resume-pdf.js':['resume-pdf.js','text/javascript'], '/resume/build': ['resume-build.html','text/html'], '/resume-build.js': ['resume-build.js','text/javascript'], '/resume/edit': ['resume-edit.html', 'text/html'], '/resume-edit.js': ['resume-edit.js', 'text/javascript'], '/support': ['support.html', 'text/html'], '/': ['index.html', 'text/html'], '/client.js': ['client.js', 'text/javascript'], '/careers.js': ['careers.js', 'text/javascript'], '/style.css': ['style.css', 'text/css'], '/resume': ['resume.html','text/html'], '/resume.js':['resume.js','text/javascript'], '/resume-model.js':['resume-model.js','text/javascript'] };
 const vendorFiles = {
+  '/vendor/docx.js':'docx/dist/index.iife.js',
   '/vendor/jspdf.js':'jspdf/dist/jspdf.umd.min.js',
   '/vendor/pdf.mjs':'pdfjs-dist/build/pdf.mjs',
   '/vendor/pdf.worker.mjs':'pdfjs-dist/build/pdf.worker.mjs',

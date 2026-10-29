@@ -1,3 +1,4 @@
+import {templateColors} from './resume-templates.js';
 export const blankTemplate = 'EDUCATION\n\nEXPERIENCE\n\nPROJECTS\n\nSKILLS\n';
 export function resumeText({name='',contact='',body=''}) {
   return [name,contact,body].filter(value=>value.trim()).join('\n\n');
@@ -38,13 +39,30 @@ export const resumeStyles = `
 .resume-document.size-small{font-size:13px}.resume-document.size-large{font-size:17px}
 .resume-document.spacing-tight .resume-record{margin-bottom:8px}.resume-document.spacing-tight h2{margin-top:12px}
 .resume-document.spacing-relaxed .resume-record{margin-bottom:22px}.resume-document.spacing-relaxed h2{margin-top:25px}
+.resume-document{--resume-accent:#222}
+.resume-document.color-asphalt{--resume-accent:#43484c}
+.resume-document.color-taupe{--resume-accent:#8b7669}
+.resume-document.color-navy{--resume-accent:#243e67}
+.resume-document.color-blue{--resume-accent:#356baf}
+.resume-document.color-teal{--resume-accent:#167b85}
+.resume-document.color-emerald{--resume-accent:#286b54}
+.resume-document.color-gold{--resume-accent:#93651e}
+.resume-document.color-red{--resume-accent:#a53540}
+.resume-document[class*="color-"] h1,.resume-document[class*="color-"] h2{color:var(--resume-accent)}
+.resume-document[class*="color-"] .resume-header{border-color:var(--resume-accent)}
+.resume-document.with-rules h2{border-bottom:1px solid var(--resume-accent);padding-bottom:4px}
+.resume-document .resume-columns{display:grid;grid-template-columns:minmax(0,32%) minmax(0,1fr);gap:24px}
+.resume-document .resume-side,.resume-document .resume-main{min-width:0}
+.resume-document .resume-photo{width:65px;height:65px;object-fit:cover;float:right;margin:0 0 10px 15px}
+.resume-document .resume-header:after{content:"";display:block;clear:both}
+.resume-document.margins-narrow{padding:25px}.resume-document.margins-wide{padding:55px}
 @media(max-width:600px){.resume-document{padding:24px 20px;font-size:14px}.resume-document h1{font-size:24px}}
 @media print{.resume-document{max-width:none;margin:0!important;padding:0!important;border:0!important;box-shadow:none;font-size:11pt}.resume-document h1{font-size:20pt}.resume-document h2{font-size:11pt}.resume-document p,.resume-document li{orphans:2;widows:2}@page{margin:18mm}}
 `;
 const sectionHeading = text => /^(profile|summary|professional summary|objective|education|experience|work experience|professional experience|employment|employment history|projects|selected projects|selected AI and business technology projects|skills|technical skills|technical and analytical skills|certifications|certificates|awards|volunteer experience|volunteering|activities|leadership|references)$/i.test(text.trim());
 const bullet = text => /^[•●▪‣*–-]\s+/.test(text);
-export function resumeMarkup({name='',contact='',body='',sections}={}){
-  if(Array.isArray(sections))return guidedMarkup({name,contact,sections});
+export function resumeMarkup({name='',contact='',body='',sections,design={},photo=''}={}){
+  if(Array.isArray(sections))return guidedMarkup({name,contact,sections,design,photo});
   const lines=body.replace(/\r\n?/g,'\n').split('\n');
   let cursor=0;
   const output=[];
@@ -90,18 +108,27 @@ export function buildGuidedResume(answers={}){
     ['experience','EXPERIENCE','role','organization',null],
     ['projects','PROJECTS','title','context',null]
   ]){
-    const entries=(answers[kind]||[]).map((item,index)=>({key:index,title:clean(item[titleField]),organization:clean(item[organizationField]),dates:clean(item.dates),text:textField?clean(item[textField]):'',bullets:(kind==='experience'?[...lines(item.tasks),...lines(item.results)]:kind==='projects'?lines(item.contribution):[]).map(line=>line.replace(/^[•*]\s+/,''))})).filter(item=>item.title||item.organization||item.dates||item.text||item.bullets.length);
+    const entries=(answers[kind]||[]).map((item,index)=>({key:index,title:[clean(item[titleField]),kind==='education'?clean(item.fieldOfStudy):''].filter(Boolean).join(' — '),organization:[clean(item[organizationField]),clean(item.location)].filter(Boolean).join(' · '),dates:clean(item.dates),text:textField?clean(item[textField]):'',bullets:(kind==='experience'?[...lines(item.tasks),...lines(item.results)]:kind==='projects'?lines(item.contribution):[]).map(line=>line.replace(/^[•*]\s+/,''))})).filter(item=>item.title||item.organization||item.dates||item.text||item.bullets.length);
     if(entries.length)sections.push({key:kind,title,entries});
   }
   if(lines(answers.skills).length)sections.push({key:'skills',title:'SKILLS',entries:[{key:0,bullets:lines(answers.skills).map(line=>line.replace(/^[•*]\s+/,''))}]});
-  for(const [key,title] of [['certifications','CERTIFICATIONS'],['languages','LANGUAGES'],['awards','AWARDS & ACTIVITIES']])if(lines(answers[key]).length)sections.push({key,title,entries:[{key:0,bullets:lines(answers[key])}]});
-  return {name:clean(answers.name),contact:['city','email','phone','link'].map(field=>clean(answers[field])).filter(Boolean).join(' | '),body:guidedBody(sections),sections};
+  for(const [key,title] of [['certifications','CERTIFICATIONS'],['languages','LANGUAGES'],['awards','AWARDS & HONORS'],['activities','ACTIVITIES'],['references','REFERENCES'],['importedText','IMPORTED DETAILS']])if(lines(answers[key]).length)sections.push({key,title,entries:[{key:0,bullets:lines(answers[key])}]});
+  if(clean(answers.customText))sections.push({key:'customText',title:clean(answers.customTitle)||'ADDITIONAL INFORMATION',entries:[{key:0,bullets:lines(answers.customText)}]});
+  return {name:clean(answers.name),contact:[[clean(answers.city),clean(answers.state),clean(answers.zip)].filter(Boolean).join(' '),...['email','phone','link'].map(field=>clean(answers[field]))].filter(Boolean).join(' | '),body:guidedBody(sections),sections};
 }
 
-function guidedMarkup({name,contact,sections}){
+export function safeResumePhoto(value){return typeof value==='string'&&value.length<420000&&/^data:image\/(?:png|jpeg);base64,[A-Za-z0-9+/=]+$/.test(value)?value:'';}
+function guidedMarkup({name,contact,sections,design={},photo=''}){
+  if(design.columns===2){
+    const sideKeys=['skills','languages','certifications','awards','activities','references'];
+    const header=guidedMarkup({name,contact,sections:[],design:{...design,columns:1},photo});
+    const side=sections.filter(section=>sideKeys.includes(section.key));const main=sections.filter(section=>!sideKeys.includes(section.key));
+    return header+'<div class="resume-columns"><div class="resume-side">'+guidedMarkup({name:'',contact:'',sections:side})+'</div><div class="resume-main">'+guidedMarkup({name:'',contact:'',sections:main})+'</div></div>';
+  }
+
   const output=[];
   const node=(tag,text,path,className='')=>'<'+tag+' data-resume-path="'+path+'"'+(className?' class="'+className+'"':'')+'>'+escape(text)+'</'+tag+'>';
-  if(name||contact)output.push('<header class="resume-header">'+(name?node('h1',name,'name'):'')+(contact?node('p',contact,'contact','resume-contact'):'')+'</header>');
+  if(name||contact)output.push('<header class="resume-header">'+(design.hasPhoto&&safeResumePhoto(photo)?'<img class="resume-photo" alt="Resume photo" src="'+escape(photo)+'">':'')+(name?node('h1',name,'name'):'')+(contact?node('p',contact,'contact','resume-contact'):'')+'</header>');
   sections.forEach((section,sectionIndex)=>{
     const sectionPath='sections.'+(section.key??sectionIndex);
     output.push('<section class="resume-section">'+node('h2',section.title,sectionPath+'.title'));
@@ -179,7 +206,7 @@ export function suggestedGuidedResume(answers){
     const result={...entry};
     if(typeof result.dates==='string')result.dates=capitalizeMonths(result.dates);
     for(const field of fields)result[field]=cleanResumeWording(typeof entry[field]==='string'?entry[field]:'').split('\n').map(line=>line.replace(/[.]+$/,'')).join('\n');
-    for(const field of ['school','qualification','role','organization','title','context'])if(typeof result[field]==='string')result[field]=headingCapitalization(result[field]);
+    for(const field of ['school','qualification','role','organization','title','context','location','fieldOfStudy'])if(typeof result[field]==='string')result[field]=headingCapitalization(result[field]);
     return result;
   });
   return buildGuidedResume(copy);
@@ -193,7 +220,7 @@ export function applyResumeEdits(model,edits={}){
     if(typeof text!=='string'||text.length>5000)continue;
     const parts=path.split('.');
     if(parts.length===1&&['name','contact'].includes(path)){result[path]=text;continue;}
-    if(!/^sections\.(?:\d+|profile|education|experience|projects|skills|certifications|languages|awards)\.(title|entries\.\d+\.(title|organization|dates|text|bullets\.\d+))$/.test(path))continue;
+    if(!/^sections\.(?:\d+|profile|education|experience|projects|skills|certifications|languages|awards|activities|references|importedText|customText)\.(title|entries\.\d+\.(title|organization|dates|text|bullets\.\d+))$/.test(path))continue;
     const sectionIndex=/^\d+$/.test(parts[1])?Number(parts[1]):result.sections.findIndex(section=>section.key===parts[1]);
     if(sectionIndex<0||!result.sections[sectionIndex])continue;parts[1]=String(sectionIndex);
     if(parts[2]==='entries'){const index=result.sections[sectionIndex].entries.findIndex((entry,index)=>(entry.key??index)===Number(parts[3]));if(index<0)continue;parts[3]=String(index);}
@@ -204,9 +231,9 @@ export function applyResumeEdits(model,edits={}){
   result.body=guidedBody(result.sections);return result;
 }
 
-export const resumeSectionNames={profile:'Profile',education:'Education',experience:'Experience',projects:'Projects',skills:'Skills',certifications:'Certifications',languages:'Languages',awards:'Awards & activities'};
+export const resumeSectionNames={profile:'Profile',education:'Education',experience:'Experience',projects:'Projects',skills:'Skills',certifications:'Certifications',languages:'Languages',awards:'Awards & honors',activities:'Activities',references:'References',importedText:'Imported details',customText:'Custom section'};
 export function resumeDesignClasses(design={}){
-  return ['template-'+(['classic','modern','compact'].includes(design.template)?design.template:'classic'),'size-'+(['small','standard','large'].includes(design.size)?design.size:'standard'),'spacing-'+(['tight','normal','relaxed'].includes(design.spacing)?design.spacing:'normal')].join(' ');
+  return ['template-'+(['classic','modern'].includes(design.font)?design.font:['classic','modern','compact'].includes(design.template)?design.template:'classic'),'size-'+(['small','standard','large'].includes(design.size)?design.size:'standard'),'spacing-'+(['tight','normal','relaxed'].includes(design.spacing)?design.spacing:'normal'),'color-'+(templateColors.some(color=>color.id===design.color)?design.color:'default'),design.graphics?'with-rules':'no-rules','margins-'+(['standard','narrow','wide'].includes(design.margins)?design.margins:'standard')].join(' ');
 }
 export function arrangeResume(model,layout={},design={}){
   const result=JSON.parse(JSON.stringify(model));
