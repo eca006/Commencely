@@ -136,9 +136,29 @@ function professionalCapitalization(text){
 function headingCapitalization(text=''){
   return professionalCapitalization(text.trim().replace(/\b[a-z]/g,letter=>letter.toUpperCase()));
 }
+// Apply narrow corrections only where the intended grammar is unambiguous.
+export function correctResumeGrammar(text=''){
+  return text
+    .replace(/\b(i) (?:is|are)\b/gi,'I am')
+    .replace(/\b(i) were\b/gi,'I was')
+    .replace(/\b(i) has\b/gi,'I have')
+    .replace(/\b(they|we|you) was\b/gi,'$1 were')
+    .replace(/\b(they|we|you) has\b/gi,'$1 have')
+    .replace(/\b(he|she|it) have\b/gi,'$1 has')
+    .replace(/\b(did(?: not|n['’]t)?|does(?: not|n['’]t)?|do(?: not|n['’]t)?) (helped|worked|managed|organized|created|assisted|used|answered|handled|supported)\b/gi,(_,aux,verb)=>aux+' '+({helped:'help',worked:'work',managed:'manage',organized:'organize',created:'create',assisted:'assist',used:'use',answered:'answer',handled:'handle',supported:'support'}[verb.toLowerCase()]))
+    .replace(/\b(responsable|responsibile)\b/gi,'responsible')
+    .replace(/\b(costumer service)\b/gi,'customer service')
+    .replace(/\brecieve\b/gi,'receive').replace(/\brecieved\b/gi,'received')
+    .replace(/\bexperiance\b/gi,'experience')
+    .replace(/\b(an) (team|customer|project|resume|school)\b/gi,'a $2')
+    .replace(/\b(a) (employee|organization|office|interview|internship)\b/gi,'an $2')
+    .replace(/[ \t]+([,.;:!?])/g,'$1')
+    .replace(/([,;:!?])(?=[A-Za-z])/g,'$1 ')
+    .replace(/\b(the|and|with|for|to)\s+\1\b/gi,'$1');
+}
 export function cleanResumeWording(text=''){
   return text.split('\n').map(line=>{
-    let value=line.trim().replace(/^[•*–-]\s*/, '').replace(/[ \t]+/g,' ');
+    let value=correctResumeGrammar(line).trim().replace(/^[•*–-]\s*/, '').replace(/[ \t]+/g,' ');
     if(!value)return '';
     value=value.replace(/^i (?:was|am) responsible for\s+/i,'Responsible for ')
       .replace(/^i (?:was|am) in charge of\s+/i,'Handled ')

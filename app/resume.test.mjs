@@ -80,3 +80,13 @@ test('preview edits stay with their original section and entry when blank entrie
   const model=suggestedGuidedResume({name:'jordan sample',experience:[{role:'desk assistant',tasks:'i talked to customers'}]});
   assert.equal(model.name,'Jordan Sample');assert.match(model.body,/Desk Assistant/);assert.match(model.body,/Communicated with customers/);
  });
+
+test('rebuild corrects common grammar without changing negation, numbers, or tense',()=>{
+  assert.equal(cleanResumeWording('i were responsable for supplies'),'Responsible for supplies.');
+  assert.equal(cleanResumeWording('I did not managed staff'),'I did not manage staff.');
+  assert.equal(cleanResumeWording('i helped an team of 4. we was on time'),'Helped a team of 4. We were on time.');
+  assert.equal(cleanResumeWording('i am an office assistant'),'I am an office assistant.');
+  assert.equal(cleanResumeWording('i worked with with customers ,and answered phones'),'Worked with customers, and answered phones.');
+  const model=suggestedGuidedResume({summary:'i has experience',education:[{notes:'i recieved an award'}],experience:[{tasks:'i did not managed staff'}],projects:[{contribution:'i created an project'}]});
+  assert.match(model.body,/I have experience/);assert.match(model.body,/Received an award/);assert.match(model.body,/I did not manage staff/);assert.match(model.body,/Created a project/);
+});

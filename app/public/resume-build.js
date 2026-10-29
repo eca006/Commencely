@@ -132,7 +132,7 @@ function applyWording(mode){
   previewEdits={};wordingMode=mode;pendingWording=null;wordingConfirmation.hidden=true;
   render();
   const changed=resumeText(currentResume())!==before;
-  const message=changed?(mode==='clean'?'Updated the wording below from your answers. You can still click any line to edit it.':'Your exact answers are now shown below.'):(mode==='clean'?'The preview already uses the suggested wording. There are no further changes from the basic wording cleanup. You can edit any preview line or choose Use my exact answers.':'The preview already matches your exact answers.');
+  const message=changed?(mode==='clean'?'Updated the wording below from your answers. You can still click any line to edit it.':'Your exact answers are now shown below.'):(mode==='clean'?'The preview already uses the suggested wording. There are no further changes from the wording and common grammar corrections. You can edit any preview line or choose Use my exact answers.':'The preview already matches your exact answers.');
   feedback(message);status.textContent=message;
 }
 function requestWording(mode){
