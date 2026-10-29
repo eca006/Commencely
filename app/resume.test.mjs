@@ -73,3 +73,10 @@ test('preview edits stay with their original section and entry when blank entrie
   const edited=applyResumeEdits(model,{'sections.education.entries.0.title':'Wrong target','sections.experience.entries.0.title':'Wrong entry','sections.experience.entries.1.bullets.0':'Welcomed visitors.'});
   assert.ok(!edited.body.includes('Wrong'));assert.ok(edited.body.includes('Welcomed visitors.'));
 });
+
+ test('suggestions improve concrete duties and capitalization while preserving qualifications',()=>{
+  assert.equal(cleanResumeWording('i worked the cash register\ni answered phones\ni made a spreadsheet in excel'),'Operated the cash register.\nAnswered phone calls.\nCreated a spreadsheet in Excel.');
+  assert.equal(cleanResumeWording('I did not supervise staff'),'I did not supervise staff.');
+  const model=suggestedGuidedResume({name:'jordan sample',experience:[{role:'desk assistant',tasks:'i talked to customers'}]});
+  assert.equal(model.name,'Jordan Sample');assert.match(model.body,/Desk Assistant/);assert.match(model.body,/Communicated with customers/);
+ });

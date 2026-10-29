@@ -24,9 +24,31 @@ function addEntry(kind,values={}){
   const section=document.createElement('fieldset');section.dataset.kind=kind;
   const legend=document.createElement('legend');legend.textContent={education:'School or training',experience:'Experience',projects:'Project or activity'}[kind];section.append(legend);
   for(const [key,labelText,type,help] of fields[kind]){
+    if(kind==='education'&&key==='dates'){
+      const group=document.createElement('div');group.className='education-dates';
+      const heading=document.createElement('p');heading.textContent=labelText;group.append(heading);
+      const stored=document.createElement('input');stored.type='hidden';stored.dataset.field='dates';stored.value=values.dates||'';
+      const controls={};
+      for(const [part,title] of [['start','Start month and year (optional)'],['end','Finish month and year (optional)']]){
+        const id='answer-'+(++rowId);const label=document.createElement('label');label.htmlFor=id;label.textContent=title;
+        const input=document.createElement('input');input.type='month';input.id=id;input.value=values[part+'Month']||'';input.dataset.field=part+'Month';controls[part]=input;group.append(label,input);
+      }
+      const label=document.createElement('label');label.textContent='Completion';const select=document.createElement('select');select.id='answer-'+(++rowId);label.htmlFor=select.id;select.dataset.field='completion';
+      for(const [value,title] of [['','Completed / attended'],['expected','Expected to finish'],['present','Currently attending']]){const option=new Option(title,value);select.add(option);}
+      select.value=values.completion||'';label.append(select);group.append(label,stored);
+      const old=document.createElement('p');old.className='note';old.textContent=stored.value?'Saved dates: '+stored.value:'';group.append(old);
+      const update=()=>{const display=value=>{if(!value)return '';const [year,month]=value.split('-');return new Intl.DateTimeFormat('en-US',{month:'long',year:'numeric',timeZone:'UTC'}).format(new Date(Date.UTC(Number(year),Number(month)-1,1)));};const start=display(controls.start.value);const end=select.value==='present'?'Present':(select.value==='expected'&&controls.end.value?'Expected ':'')+display(controls.end.value);stored.value=[start,end].filter(Boolean).join(' – ');old.textContent='';};
+      group.addEventListener('input',update);group.addEventListener('change',()=>{update();changed();});section.append(group);continue;
+    }
     const id='answer-'+(++rowId);const label=document.createElement('label');label.htmlFor=id;label.textContent=labelText;
     const input=document.createElement(type==='textarea'?'textarea':'input');input.id=id;input.dataset.field=key;input.maxLength=type==='textarea'?4000:300;if(type==='textarea')input.rows=3;
     input.value=typeof values[key]==='string'?values[key]:'';section.append(label,input);
+    if(kind==='education'&&['school','qualification'].includes(key)){
+      const list=document.createElement('datalist');list.id=id+'-options';input.setAttribute('list',list.id);
+      const choices=key==='school'?['University of Arkansas','NorthWest Arkansas Community College (NWACC)','Northwest Technical Institute','High school','Trade or vocational school','Online course or training','Employer training']:['High school diploma','GED','Associate degree','Bachelor’s degree','Master’s degree','Certificate or vocational training','Business','Nursing','Computer science','Information technology','Education','Marketing','Accounting','Welding','Healthcare training'];
+      for(const choice of choices)list.append(new Option(choice));section.append(list);
+      const hint=document.createElement('p');hint.className='note';hint.textContent='Choose a suggestion or type your own '+(key==='school'?'school or training provider.':'program, subject, or qualification.');section.append(hint);
+    }
     if(help){const note=document.createElement('p');note.className='note';note.id=id+'-help';note.textContent=help;input.setAttribute('aria-describedby',note.id);section.append(note);}
   }
   const remove=document.createElement('button');remove.type='button';remove.textContent='Remove this '+({education:'education entry',experience:'experience',projects:'project'}[kind]);
@@ -59,6 +81,14 @@ function showStep(next,focus=true){
 }
 function changed(){status.textContent=Object.keys(previewEdits).length?'Answers updated. Your preview edits are kept; use Rebuild wording to start again from these answers.':'Changes are not saved yet. Save your progress before leaving.';render();}
 for(const button of document.querySelectorAll('[data-add]'))button.addEventListener('click',()=>{if(!discardPreviewEdits())return;addEntry(button.dataset.add);changed();});
+const phone=form.elements.phone;
+phone.addEventListener('input',()=>{
+  if(/[^\d\s()+.-]/.test(phone.value))return;
+  const digits=phone.value.replace(/\D/g,'');if(digits.length>11||(digits.length===11&&!digits.startsWith('1')))return;
+  const national=digits.length===11?digits.slice(1):digits;
+  phone.value=(digits.length===11?'1-':'')+[national.slice(0,3),national.slice(3,6),national.slice(6,10)].filter(Boolean).join('-');
+});
+form.addEventListener('change',changed);
 form.addEventListener('submit',event=>event.preventDefault());form.addEventListener('input',changed);
 document.querySelector('#builder-next').addEventListener('click',()=>{const invalid=document.querySelector('[data-step="'+step+'"] :invalid');if(invalid){invalid.reportValidity();return;}showStep(Math.min(4,step+1));});
 document.querySelector('#builder-back').addEventListener('click',()=>showStep(Math.max(0,step-1)));

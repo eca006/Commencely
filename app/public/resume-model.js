@@ -129,20 +129,36 @@ function guidedMarkup({name,contact,sections}){
   return output.join('\n');
 }
 
+function professionalCapitalization(text){
+  const terms={excel:'Excel',powerpoint:'PowerPoint',microsoft:'Microsoft',word:'Word',google:'Google',linkedin:'LinkedIn',javascript:'JavaScript',html:'HTML',css:'CSS',sql:'SQL',cpr:'CPR',ged:'GED',gpa:'GPA'};
+  return text.replace(/\b(excel|powerpoint|microsoft|word|google|linkedin|javascript|html|css|sql|cpr|ged|gpa)\b/gi,word=>terms[word.toLowerCase()]);
+}
+function headingCapitalization(text=''){
+  return professionalCapitalization(text.trim().replace(/\b[a-z]/g,letter=>letter.toUpperCase()));
+}
 export function cleanResumeWording(text=''){
   return text.split('\n').map(line=>{
-    let value=line.trim().replace(/[ \t]+/g,' ');
+    let value=line.trim().replace(/^[•*–-]\s*/, '').replace(/[ \t]+/g,' ');
     if(!value)return '';
     value=value.replace(/^i (?:was|am) responsible for\s+/i,'Responsible for ')
       .replace(/^i (?:was|am) in charge of\s+/i,'Handled ')
       .replace(/^i\s+(?!(?:am|was|have|had|can|would|will|do|did|don['’]t|didn['’]t)\b)/i,'');
+    const replacements=[[/^help(?:ed)? (?:out )?with\s+/i,'Assisted with '],[/^worked (?:(?:at|on) )?(?:the )?cash register\b/i,'Operated the cash register'],[/^talked to customers\b/i,'Communicated with customers'],[/^answered (?:the )?phones\b/i,'Answered phone calls'],[/^put away supplies\b/i,'Organized and stored supplies'],[/^made (?:an? )?spreadsheet\b/i,'Created a spreadsheet'],[/^made (?:an? )?presentation\b/i,'Created a presentation'],[/^kept (?:the )?work area clean\b/i,'Maintained a clean work area'],[/^took care of\s+/i,'Cared for ']];
+    for(const [pattern,replacement] of replacements)value=value.replace(pattern,replacement);
+    value=professionalCapitalization(value).replace(/\bi\b/g,'I');
+    value=value.replace(/([.!?]\s+)([a-z])/g,(_,space,letter)=>space+letter.toUpperCase());
     value=value.charAt(0).toUpperCase()+value.slice(1);
     return /[.!?:;]$/.test(value)?value:value+'.';
   }).join('\n');
 }
 export function suggestedGuidedResume(answers){
-  const copy={...answers};
-  for(const [kind,fields] of [['experience',['tasks','results']],['projects',['contribution']]])copy[kind]=(answers[kind]||[]).map(entry=>{const result={...entry};for(const field of fields)result[field]=cleanResumeWording(typeof entry[field]==='string'?entry[field]:'');return result;});
+  const copy={...answers,name:headingCapitalization(answers.name||''),city:headingCapitalization(answers.city||''),summary:cleanResumeWording(answers.summary||''),skills:professionalCapitalization(answers.skills||'').split('\n').map(line=>line.charAt(0).toUpperCase()+line.slice(1)).join('\n')};
+  for(const [kind,fields] of [['education',['notes']],['experience',['tasks','results']],['projects',['contribution']]])copy[kind]=(answers[kind]||[]).map(entry=>{
+    const result={...entry};
+    for(const field of fields)result[field]=cleanResumeWording(typeof entry[field]==='string'?entry[field]:'');
+    for(const field of ['school','qualification','role','organization','title','context'])if(typeof result[field]==='string')result[field]=headingCapitalization(result[field]);
+    return result;
+  });
   return buildGuidedResume(copy);
 }
 export function guidedBody(sections=[]){
