@@ -24,20 +24,27 @@ function addEntry(kind,values={}){
   const section=document.createElement('fieldset');section.dataset.kind=kind;
   const legend=document.createElement('legend');legend.textContent={education:'School or training',experience:'Experience',projects:'Project or activity'}[kind];section.append(legend);
   for(const [key,labelText,type,help] of fields[kind]){
-    if(kind==='education'&&key==='dates'){
+    if(key==='dates'){
       const group=document.createElement('div');group.className='education-dates';
       const heading=document.createElement('p');heading.textContent=labelText;group.append(heading);
       const stored=document.createElement('input');stored.type='hidden';stored.dataset.field='dates';stored.value=values.dates||'';
       const controls={};
+      const monthNames=['january','february','march','april','may','june','july','august','september','october','november','december'];
+      const legacyMonths=[...(values.dates||'').matchAll(/\b(january|february|march|april|may|june|july|august|september|october|november|december)\s+(\d{4})\b/gi)].map(match=>match[2]+'-'+String(monthNames.indexOf(match[1].toLowerCase())+1).padStart(2,'0'));
+      const hasExpected=/expected/i.test(values.dates||'');
+      const parsedStart=hasExpected&&legacyMonths.length===1?'':legacyMonths[0]||'';
+      const parsedEnd=hasExpected&&legacyMonths.length===1?legacyMonths[0]:legacyMonths[1]||'';
+
       for(const [part,title] of [['start','Start month and year (optional)'],['end','Finish month and year (optional)']]){
         const id='answer-'+(++rowId);const label=document.createElement('label');label.htmlFor=id;label.textContent=title;
-        const input=document.createElement('input');input.type='month';input.id=id;input.value=values[part+'Month']||'';input.dataset.field=part+'Month';controls[part]=input;group.append(label,input);
+        const input=document.createElement('input');input.type='month';input.id=id;input.value=values[part+'Month']||(part==='start'?parsedStart:parsedEnd);input.dataset.field=part+'Month';controls[part]=input;group.append(label,input);
       }
-      const label=document.createElement('label');label.textContent='Completion';const select=document.createElement('select');select.id='answer-'+(++rowId);label.htmlFor=select.id;select.dataset.field='completion';
-      for(const [value,title] of [['','Completed / attended'],['expected','Expected to finish'],['present','Currently attending']]){const option=new Option(title,value);select.add(option);}
-      select.value=values.completion||'';label.append(select);group.append(label,stored);
+      const label=document.createElement('label');label.textContent=kind==='education'?'Completion':'End date';const select=document.createElement('select');select.id='answer-'+(++rowId);label.htmlFor=select.id;select.dataset.field='completion';
+      for(const [value,title] of (kind==='education'?[['','Completed / attended'],['expected','Expected to finish'],['present','Currently attending']]:[['','Finished'],['present','Present']])){const option=new Option(title,value);select.add(option);}
+      select.value=values.completion||(/present/i.test(values.dates||'')?'present':kind==='education'&&hasExpected?'expected':'');group.append(label,select,stored);
+      controls.end.disabled=select.value==='present';
       const old=document.createElement('p');old.className='note';old.textContent=stored.value?'Saved dates: '+stored.value:'';group.append(old);
-      const update=()=>{const display=value=>{if(!value)return '';const [year,month]=value.split('-');return new Intl.DateTimeFormat('en-US',{month:'long',year:'numeric',timeZone:'UTC'}).format(new Date(Date.UTC(Number(year),Number(month)-1,1)));};const start=display(controls.start.value);const end=select.value==='present'?'Present':(select.value==='expected'&&controls.end.value?'Expected ':'')+display(controls.end.value);stored.value=[start,end].filter(Boolean).join(' – ');old.textContent='';};
+      const update=()=>{controls.end.disabled=select.value==='present';const display=value=>{if(!value)return '';const [year,month]=value.split('-');return new Intl.DateTimeFormat('en-US',{month:'long',year:'numeric',timeZone:'UTC'}).format(new Date(Date.UTC(Number(year),Number(month)-1,1)));};const start=display(controls.start.value);const end=select.value==='present'?'Present':(select.value==='expected'&&controls.end.value?'Expected ':'')+display(controls.end.value);stored.value=[start,end].filter(Boolean).join(' – ');old.textContent='';};
       group.addEventListener('input',update);group.addEventListener('change',()=>{update();changed();});section.append(group);continue;
     }
     const id='answer-'+(++rowId);const label=document.createElement('label');label.htmlFor=id;label.textContent=labelText;

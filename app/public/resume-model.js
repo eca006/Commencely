@@ -130,15 +130,27 @@ function guidedMarkup({name,contact,sections}){
 }
 
 function professionalCapitalization(text){
-  const terms={excel:'Excel',powerpoint:'PowerPoint',microsoft:'Microsoft',word:'Word',google:'Google',linkedin:'LinkedIn',javascript:'JavaScript',html:'HTML',css:'CSS',sql:'SQL',cpr:'CPR',ged:'GED',gpa:'GPA'};
-  return text.replace(/\b(excel|powerpoint|microsoft|word|google|linkedin|javascript|html|css|sql|cpr|ged|gpa)\b/gi,word=>terms[word.toLowerCase()]);
+  const terms={excel:'Excel',powerpoint:'PowerPoint',microsoft:'Microsoft',word:'Word',google:'Google',linkedin:'LinkedIn',javascript:'JavaScript',html:'HTML',css:'CSS',sql:'SQL',python:'Python',cpr:'CPR',ged:'GED',gpa:'GPA'};
+  return text.replace(/c#/gi,'C#').replace(/\b(excel|powerpoint|microsoft|word|google|linkedin|javascript|html|css|sql|python|cpr|ged|gpa)\b/gi,word=>terms[word.toLowerCase()]);
+}
+function fixCommonSpelling(text=''){
+  const corrections={univeristy:'university',universtiy:'university',universiy:'university',assitant:'assistant',assisstant:'assistant',managment:'management',manger:'manager',buisness:'business',bussiness:'business',analitics:'analytics',anayltics:'analytics',comunication:'communication',communciation:'communication',orginized:'organized',schedual:'schedule',schedualed:'scheduled',maintianed:'maintained',developement:'development'};
+  return text.replace(/\b(univeristy|universtiy|universiy|assitant|assisstant|managment|manger|buisness|bussiness|analitics|anayltics|comunication|communciation|orginized|schedual|schedualed|maintianed|developement)\b/gi,word=>corrections[word.toLowerCase()]);
 }
 function headingCapitalization(text=''){
-  return professionalCapitalization(text.trim().replace(/\b[a-z]/g,letter=>letter.toUpperCase()));
+  const minor=new Set(['of','and','in','at','for','the','to','or','a','an']);
+  return professionalCapitalization(fixCommonSpelling(text).trim().split(/(\s+)/).map((word,index)=>{
+    if(!word.trim())return word;
+    if(index>0&&minor.has(word.toLowerCase()))return word.toLowerCase();
+    return word.charAt(0).toUpperCase()+word.slice(1).replace(/(['’])S\b/g,'$1s');
+  }).join(''));
+}
+function capitalizeMonths(text=''){
+  return text.replace(/\b(january|february|march|april|may|june|july|august|september|october|november|december|present|expected)\b/gi,word=>word.charAt(0).toUpperCase()+word.slice(1).toLowerCase());
 }
 // Apply narrow corrections only where the intended grammar is unambiguous.
 export function correctResumeGrammar(text=''){
-  return text
+  return fixCommonSpelling(text)
     .replace(/\b(i) (?:is|are)\b/gi,'I am')
     .replace(/\b(i) were\b/gi,'I was')
     .replace(/\b(i) has\b/gi,'I have')
@@ -151,7 +163,7 @@ export function correctResumeGrammar(text=''){
     .replace(/\brecieve\b/gi,'receive').replace(/\brecieved\b/gi,'received')
     .replace(/\bexperiance\b/gi,'experience')
     .replace(/\b(an) (team|customer|project|resume|school)\b/gi,'a $2')
-    .replace(/\b(a) (employee|organization|office|interview|internship)\b/gi,'an $2')
+    .replace(/\b(a) (employee|organization|office|interview|internship|assistant|award)\b/gi,'an $2')
     .replace(/[ \t]+([,.;:!?])/g,'$1')
     .replace(/([,;:!?])(?=[A-Za-z])/g,'$1 ')
     .replace(/\b(the|and|with|for|to)\s+\1\b/gi,'$1');
@@ -162,7 +174,7 @@ export function cleanResumeWording(text=''){
     if(!value)return '';
     value=value.replace(/^i (?:was|am) responsible for\s+/i,'Responsible for ')
       .replace(/^i (?:was|am) in charge of\s+/i,'Handled ')
-      .replace(/^i\s+(?!(?:am|was|have|had|can|would|will|do|did|don['’]t|didn['’]t)\b)/i,'');
+      .replace(/^i\s+(?!(?:am|was|have|had|can|could|may|might|must|should|would|will|do|did|don['’]t|didn['’]t)\b)/i,'');
     const replacements=[[/^help(?:ed)? (?:out )?with\s+/i,'Assisted with '],[/^worked (?:(?:at|on) )?(?:the )?cash register\b/i,'Operated the cash register'],[/^talked to customers\b/i,'Communicated with customers'],[/^answered (?:the )?phones\b/i,'Answered phone calls'],[/^put away supplies\b/i,'Organized and stored supplies'],[/^made (?:an? )?spreadsheet\b/i,'Created a spreadsheet'],[/^made (?:an? )?presentation\b/i,'Created a presentation'],[/^kept (?:the )?work area clean\b/i,'Maintained a clean work area'],[/^took care of\s+/i,'Cared for ']];
     for(const [pattern,replacement] of replacements)value=value.replace(pattern,replacement);
     value=professionalCapitalization(value).replace(/\bi\b/g,'I');
@@ -175,7 +187,8 @@ export function suggestedGuidedResume(answers){
   const copy={...answers,name:headingCapitalization(answers.name||''),city:headingCapitalization(answers.city||''),summary:cleanResumeWording(answers.summary||''),skills:professionalCapitalization(answers.skills||'').split('\n').map(line=>line.charAt(0).toUpperCase()+line.slice(1)).join('\n')};
   for(const [kind,fields] of [['education',['notes']],['experience',['tasks','results']],['projects',['contribution']]])copy[kind]=(answers[kind]||[]).map(entry=>{
     const result={...entry};
-    for(const field of fields)result[field]=cleanResumeWording(typeof entry[field]==='string'?entry[field]:'');
+    if(typeof result.dates==='string')result.dates=capitalizeMonths(result.dates);
+    for(const field of fields)result[field]=cleanResumeWording(typeof entry[field]==='string'?entry[field]:'').split('\n').map(line=>line.replace(/[.]+$/,'')).join('\n');
     for(const field of ['school','qualification','role','organization','title','context'])if(typeof result[field]==='string')result[field]=headingCapitalization(result[field]);
     return result;
   });

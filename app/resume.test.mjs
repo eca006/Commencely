@@ -57,14 +57,14 @@ test('wording suggestions clean supplied duties without adding metrics or removi
   assert.equal(cleanResumeWording('i helped customers\ni used Excel 2 days a week'),'Helped customers.\nUsed Excel 2 days a week.');
   assert.equal(cleanResumeWording('I did not manage staff'),'I did not manage staff.');
   const model=suggestedGuidedResume({experience:[{role:'Volunteer',tasks:'i organized supplies',results:''}]});
-  assert.deepEqual(model.sections[0].entries[0].bullets,['Organized supplies.']);assert.ok(!/\d/.test(model.body));
+  assert.deepEqual(model.sections[0].entries[0].bullets,['Organized supplies']);assert.ok(!/\d/.test(model.body));
 });
 test('preview edits replace generated wording in HTML and editable text without accepting arbitrary object paths',()=>{
   const model=suggestedGuidedResume({experience:[{role:'Volunteer',dates:'2024',tasks:'i helped visitors'}]});
   const edited=applyResumeEdits(model,{'sections.0.entries.0.bullets.0':'Answered visitor questions.','__proto__.polluted':'bad'});
   assert.match(edited.body,/Answered visitor questions/);assert.ok(!edited.body.includes('Helped visitors'));
   assert.ok(resumeHTML(edited).includes('Answered visitor questions.'));assert.equal({}.polluted,undefined);
-  assert.equal(model.sections[0].entries[0].bullets[0],'Helped visitors.');
+  assert.equal(model.sections[0].entries[0].bullets[0],'Helped visitors');
 });
 
 test('preview edits stay with their original section and entry when blank entries disappear',()=>{
@@ -89,4 +89,12 @@ test('rebuild corrects common grammar without changing negation, numbers, or ten
   assert.equal(cleanResumeWording('i worked with with customers ,and answered phones'),'Worked with customers, and answered phones.');
   const model=suggestedGuidedResume({summary:'i has experience',education:[{notes:'i recieved an award'}],experience:[{tasks:'i did not managed staff'}],projects:[{contribution:'i created an project'}]});
   assert.match(model.body,/I have experience/);assert.match(model.body,/Received an award/);assert.match(model.body,/I did not manage staff/);assert.match(model.body,/Created a project/);
+});
+
+test('rebuild fixes reported spelling and formatting without punctuation on bullets',()=>{
+  const model=suggestedGuidedResume({education:[{school:'univeristy of arkansas',qualification:'bachelor’S degree'}],experience:[{role:'assitant manager',dates:'may 2024 - may 2026',tasks:'was a assistant manager who helped customers'}],skills:'sql, python, c#'});
+  assert.match(model.body,/University of Arkansas/);assert.match(model.body,/Bachelor’s Degree/);assert.match(model.body,/May 2024 - May 2026/);
+  assert.match(model.body,/Assistant Manager/);assert.match(model.body,/Was an assistant manager who helped customers/);
+  assert.match(model.body,/SQL, Python, C#/);assert.ok(!model.sections.find(s=>s.key==='experience').entries[0].bullets[0].endsWith('.'));
+  assert.equal(cleanResumeWording('I may work weekends'),'I may work weekends.');
 });
