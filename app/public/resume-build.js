@@ -1,4 +1,5 @@
-import {buildGuidedResume,resumeText,resumeMarkup,resumeStyles,resumeHTML,hasResumeContent,suggestedGuidedResume,applyResumeEdits} from './resume-model.js';
+import {downloadResumePDF} from './resume-pdf.js';
+import {buildGuidedResume,resumeText,resumeMarkup,resumeStyles,resumeHTML,hasResumeContent,suggestedGuidedResume,applyResumeEdits,arrangeResume,resumeSectionNames,resumeDesignClasses} from './resume-model.js';
 const style=document.createElement('style');style.textContent=resumeStyles;document.head.append(style);
 const form=document.querySelector('#builder-form');
 const status=document.querySelector('#builder-status');
@@ -14,10 +15,13 @@ let rowId=0;
 let savedAnswers=null;
 let previewEdits={};
 let wordingMode='clean';
+let layout={order:Object.keys(resumeSectionNames),hidden:[]};
+let design={template:'classic',size:'standard',spacing:'normal'};
+let autosaveTimer;let ready=false;let previousWording=null;
 const preview=document.querySelector('#resume-preview');
-function snapshot(){return {...answers(),_previewEdits:previewEdits,_wordingMode:wordingMode};}
-function currentResume(){return applyResumeEdits(wordingMode==='clean'?suggestedGuidedResume(answers()):buildGuidedResume(answers()),previewEdits);}
-function saveState(){const saved=JSON.stringify(snapshot())===savedAnswers;document.querySelector('#save-builder').textContent=saved?'Progress saved ✓':'Save progress on this browser';document.querySelector('#save-builder').disabled=saved;}
+function snapshot(){return {...answers(),_previewEdits:previewEdits,_wordingMode:wordingMode,_layout:layout,_design:design};}
+function currentResume(){return arrangeResume(applyResumeEdits(wordingMode==='clean'?suggestedGuidedResume(answers()):buildGuidedResume(answers()),previewEdits),layout,design);}
+function saveState(){const saved=JSON.stringify(snapshot())===savedAnswers;document.querySelector('#save-builder').textContent=saved?'Progress saved ✓':'Save now';document.querySelector('#save-builder').disabled=saved;}
 function discardPreviewEdits(){if(Object.keys(previewEdits).length&&!confirm('Rebuild the preview from your answers and replace your preview edits?'))return false;previewEdits={};return true;}
 
 function addEntry(kind,values={}){
@@ -58,13 +62,22 @@ function addEntry(kind,values={}){
     }
     if(help){const note=document.createElement('p');note.className='note';note.id=id+'-help';note.textContent=help;input.setAttribute('aria-describedby',note.id);section.append(note);}
   }
+  const tools=document.createElement('div');tools.className='entry-actions';
+  for(const [action,text] of [['up','Move up'],['down','Move down'],['copy','Duplicate']]){
+    const button=document.createElement('button');button.type='button';button.dataset.entryAction=action;button.textContent=text;button.setAttribute('aria-label',text+' '+legend.textContent.toLowerCase());
+    button.addEventListener('click',()=>{if(!discardPreviewEdits())return;
+      if(action==='copy'){const value=Object.fromEntries([...section.querySelectorAll('[data-field]')].map(input=>[input.dataset.field,input.value]));addEntry(kind,value);}
+      if(action==='up'&&section.previousElementSibling)section.parentElement.insertBefore(section,section.previousElementSibling);
+      if(action==='down'&&section.nextElementSibling)section.parentElement.insertBefore(section.nextElementSibling,section);
+      changed();});tools.append(button);
+  }section.append(tools);
   const remove=document.createElement('button');remove.type='button';remove.textContent='Remove this '+({education:'education entry',experience:'experience',projects:'project'}[kind]);
   remove.addEventListener('click',()=>{const hasText=[...section.querySelectorAll('input,textarea')].some(input=>input.value.trim());if((hasText||Object.keys(previewEdits).length)&&!confirm('Remove this entry and rebuild the preview from your remaining answers?'))return;previewEdits={};section.remove();changed();});section.append(remove);
   document.getElementById(kind+'-entries').append(section);
 }
 function answers(){
   const result={};
-  for(const name of ['name','city','email','phone','link','summary','skills'])result[name]=form.elements[name].value;
+  for(const name of ['name','city','email','phone','link','summary','skills','certifications','languages','awards'])result[name]=form.elements[name].value;
   for(const kind of Object.keys(fields))result[kind]=[...document.querySelectorAll('fieldset[data-kind="'+kind+'"]')].map(row=>Object.fromEntries([...row.querySelectorAll('[data-field]')].map(input=>[input.dataset.field,input.value])));
   return result;
 }
@@ -72,21 +85,27 @@ function render(){
   const model=currentResume();
   preview.innerHTML=resumeMarkup(model);
   for(const node of preview.querySelectorAll('[data-resume-path]')){node.contentEditable='plaintext-only';node.setAttribute('role','textbox');node.setAttribute('aria-label','Edit '+node.textContent.slice(0,90));node.spellcheck=true;}
-  document.querySelector('#resume-preview').hidden=step!==4;
+  preview.hidden=false;preview.className='resume-document '+resumeDesignClasses(design);
   const content=hasResumeContent(model);
-  for(const id of ['builder-download','builder-print','builder-edit'])document.getElementById(id).disabled=!content;
+  for(const id of ['builder-download','builder-print','builder-edit','builder-pdf','top-download'])document.getElementById(id).disabled=!content;
   document.querySelector('#builder-review-status').textContent=content?(wordingMode==='clean'?'Suggested wording is ready. Click any line in the preview to edit it.':'Your exact answers are shown. Click any line in the preview to edit it.'):'Add at least one education, experience, project, or skill detail before downloading.';
-  saveState();
+  for(const row of document.querySelectorAll('fieldset[data-kind]')){
+    row.querySelector('[data-entry-action="up"]').disabled=!row.previousElementSibling;
+    row.querySelector('[data-entry-action="down"]').disabled=!row.nextElementSibling;
+  }
+  saveState();renderChecklist();
 }
+
 function showStep(next,focus=true){
   step=next;
+  for(const button of document.querySelectorAll('[data-go-step]')){const active=Number(button.dataset.goStep)===step;button.setAttribute('aria-current',active?'step':'false');}
   for(const panel of document.querySelectorAll('[data-step]'))panel.hidden=Number(panel.dataset.step)!==step;
   document.querySelector('#builder-progress').textContent=`Step ${step+1} of 5 · ${steps[step]}`;
   document.querySelector('#builder-back').hidden=step===0;document.querySelector('#builder-next').hidden=step===4;
   document.querySelector('#builder-next').textContent='Next: '+(steps[step+1]||'Review');render();
   if(focus){const heading=document.querySelector('[data-step="'+step+'"] h2');heading.tabIndex=-1;heading.focus();heading.scrollIntoView({behavior:'smooth'});}
 }
-function changed(){status.textContent=Object.keys(previewEdits).length?'Answers updated. Your preview edits are kept; use Rebuild wording to start again from these answers.':'Changes are not saved yet. Save your progress before leaving.';render();}
+function changed(){queueAutosave();status.textContent=Object.keys(previewEdits).length?'Answers updated. Your preview edits are kept; use Rebuild wording to start again from these answers.':'Changes are not saved yet. Save your progress before leaving.';render();}
 for(const button of document.querySelectorAll('[data-add]'))button.addEventListener('click',()=>{if(!discardPreviewEdits())return;addEntry(button.dataset.add);changed();});
 const phone=form.elements.phone;
 phone.addEventListener('input',()=>{
@@ -113,15 +132,17 @@ document.querySelector('#builder-edit').addEventListener('click',()=>{
 let saved;
 try{saved=JSON.parse(localStorage.getItem(storageKey));}catch{}
 if(saved&&typeof saved==='object'&&!Array.isArray(saved)){
-  for(const name of ['name','city','email','phone','link','summary','skills'])if(typeof saved[name]==='string')form.elements[name].value=saved[name];
+  for(const name of ['name','city','email','phone','link','summary','skills','certifications','languages','awards'])if(typeof saved[name]==='string')form.elements[name].value=saved[name];
   for(const kind of Object.keys(fields)){const entries=Array.isArray(saved[kind])?saved[kind].filter(entry=>entry&&typeof entry==='object').slice(0,30):[{}];for(const entry of entries)addEntry(kind,entry);}
   if(saved._previewEdits&&typeof saved._previewEdits==='object'&&!Array.isArray(saved._previewEdits))previewEdits=saved._previewEdits;
   wordingMode=saved._wordingMode==='exact'?'exact':'clean';
+  if(saved._layout&&typeof saved._layout==='object')layout={order:Array.isArray(saved._layout.order)?saved._layout.order:Object.keys(resumeSectionNames),hidden:Array.isArray(saved._layout.hidden)?saved._layout.hidden:[]};
+
   savedAnswers=JSON.stringify(snapshot());status.textContent='Your saved answers are ready. Continue through the steps to review your resume.';
 }else for(const kind of Object.keys(fields))addEntry(kind);
 preview.addEventListener('input',event=>{
   const node=event.target.closest('[data-resume-path]');if(!node)return;
-  previewEdits[node.dataset.resumePath]=node.innerText.trim();
+  previewEdits[node.dataset.resumePath]=node.innerText.trim();queueAutosave();
   status.textContent='Preview changes are not saved yet. Save progress to keep your wording.';saveState();
 });
 preview.addEventListener('paste',event=>{
@@ -133,14 +154,15 @@ let pendingWording=null;
 const wordingFeedback=document.querySelector('#wording-feedback');
 const wordingConfirmation=document.querySelector('#wording-confirmation');
 function feedback(message){wordingFeedback.textContent=message;wordingFeedback.scrollIntoView({block:'nearest',behavior:'smooth'});}
-function wordingCandidate(mode){return applyResumeEdits(mode==='clean'?suggestedGuidedResume(answers()):buildGuidedResume(answers()),{});}
+function wordingCandidate(mode){return arrangeResume(applyResumeEdits(mode==='clean'?suggestedGuidedResume(answers()):buildGuidedResume(answers()),{}),layout,design);}
 function applyWording(mode){
   const before=resumeText(currentResume());
+  previousWording={previewEdits:{...previewEdits},wordingMode};document.querySelector('#undo-wording').hidden=false;
   previewEdits={};wordingMode=mode;pendingWording=null;wordingConfirmation.hidden=true;
   render();
   const changed=resumeText(currentResume())!==before;
   const message=changed?(mode==='clean'?'Updated the wording below from your answers. You can still click any line to edit it.':'Your exact answers are now shown below.'):(mode==='clean'?'The preview already uses the suggested wording. There are no further changes from the wording and common grammar corrections. You can edit any preview line or choose Use my exact answers.':'The preview already matches your exact answers.');
-  feedback(message);status.textContent=message;
+  feedback(message);status.textContent=message;queueAutosave();
 }
 function requestWording(mode){
   pendingWording=null;wordingConfirmation.hidden=true;
@@ -154,4 +176,37 @@ document.querySelector('#rebuild-wording').addEventListener('click',()=>requestW
 document.querySelector('#exact-wording').addEventListener('click',()=>requestWording('exact'));
 document.querySelector('#confirm-wording').addEventListener('click',()=>{if(pendingWording)applyWording(pendingWording);});
 document.querySelector('#cancel-wording').addEventListener('click',()=>{pendingWording=null;wordingConfirmation.hidden=true;feedback('Your preview edits were kept. Nothing was replaced.');});
-showStep(0,false);
+for(const [index,name] of steps.entries()){
+  const button=document.createElement('button');button.type='button';button.dataset.goStep=index;button.textContent=String(index+1).padStart(2,'0')+'  '+name;
+  button.addEventListener('click',()=>showStep(index));document.querySelector('#builder-sections').append(button);
+}
+renderLayout();ready=true;showStep(0,false);
+function renderLayout(){
+  const container=document.querySelector('#layout-sections');container.replaceChildren();
+  for(const [index,key] of layout.order.entries()){
+    if(!Object.hasOwn(resumeSectionNames,key))continue;
+    const row=document.createElement('div');row.className='layout-row';
+    const label=document.createElement('label');const check=document.createElement('input');check.type='checkbox';check.checked=!layout.hidden.includes(key);label.append(check,document.createTextNode(resumeSectionNames[key]));
+    check.addEventListener('change',()=>{layout.hidden=check.checked?layout.hidden.filter(value=>value!==key):[...layout.hidden,key];changed();});row.append(label);
+    for(const [offset,text] of [[-1,'Up'],[1,'Down']]){const button=document.createElement('button');button.type='button';button.textContent=text;button.setAttribute('aria-label','Move '+resumeSectionNames[key]+' '+text.toLowerCase());button.disabled=index+offset<0||index+offset>=layout.order.length;button.addEventListener('click',()=>{[layout.order[index],layout.order[index+offset]]=[layout.order[index+offset],layout.order[index]];renderLayout();changed();});row.append(button);}
+    container.append(row);
+  }
+}
+function queueAutosave(){if(!ready)return;clearTimeout(autosaveTimer);autosaveTimer=setTimeout(persist,600);}
+function persist(){
+  try{const serialized=JSON.stringify(snapshot());localStorage.setItem(storageKey,serialized);savedAnswers=serialized;saveState();status.textContent='All changes saved in this browser.';}
+  catch{status.textContent='Could not save automatically. Keep this page open and download a copy.';}
+}
+window.addEventListener('pagehide',()=>{if(ready)persist();});
+function renderChecklist(){
+  const model=currentResume();const checks=[['Name added',!!model.name],['Contact detail added',!!model.contact],['Education, experience, or skills added',hasResumeContent(model)]];
+  const list=document.querySelector('#resume-checklist');list.replaceChildren();
+  for(const [label,complete] of checks){const item=document.createElement('li');item.textContent=(complete?'Done: ':'To add: ')+label;item.className=complete?'complete':'';list.append(item);}
+}
+document.querySelector('#undo-wording').addEventListener('click',()=>{if(!previousWording)return;previewEdits=previousWording.previewEdits;wordingMode=previousWording.wordingMode;previousWording=null;document.querySelector('#undo-wording').hidden=true;render();queueAutosave();feedback('Restored your wording from before the last rebuild.');});
+async function downloadPDF(){
+  try{await downloadResumePDF(currentResume());status.textContent='PDF download requested. Check your browser downloads.';}
+  catch{status.textContent='The PDF could not be created. You can use Print / Save as PDF instead.';}
+}
+for(const id of ['builder-pdf','top-download'])document.getElementById(id).addEventListener('click',downloadPDF);
+

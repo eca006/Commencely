@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {resumeText,resumeHTML,hasResumeContent,blankTemplate,validateResumeFile,resumeMarkup,buildGuidedResume,cleanResumeWording,suggestedGuidedResume,applyResumeEdits} from './public/resume-model.js';
+import {resumeText,resumeHTML,hasResumeContent,blankTemplate,validateResumeFile,resumeMarkup,buildGuidedResume,cleanResumeWording,suggestedGuidedResume,applyResumeEdits,arrangeResume,resumeDesignClasses} from './public/resume-model.js';
 test('exports only provided facts and keeps multiline text',()=>{
   const model={name:'Jordan Sample',contact:'jordan@example.test',body:'EXPERIENCE\nCampus desk assistant\nAnswered visitor questions.'};
   assert.equal(resumeText(model),'Jordan Sample\n\njordan@example.test\n\nEXPERIENCE\nCampus desk assistant\nAnswered visitor questions.');
@@ -97,4 +97,11 @@ test('rebuild fixes reported spelling and formatting without punctuation on bull
   assert.match(model.body,/Assistant Manager/);assert.match(model.body,/Was an assistant manager who helped customers/);
   assert.match(model.body,/SQL, Python, C#/);assert.ok(!model.sections.find(s=>s.key==='experience').entries[0].bullets[0].endsWith('.'));
   assert.equal(cleanResumeWording('I may work weekends'),'I may work weekends.');
+});
+
+test('layout controls reorder and hide sections without altering saved source content',()=>{
+  const source=buildGuidedResume({education:[{school:'Example School'}],experience:[{role:'Volunteer'}],certifications:'First aid — 2025',languages:'Spanish — conversational',awards:'Community award'});
+  const arranged=arrangeResume(source,{order:['experience','education'],hidden:['languages']},{template:'modern',size:'large'});
+  assert.equal(arranged.sections[0].key,'experience');assert.ok(!arranged.body.includes('Spanish'));assert.ok(source.body.includes('Spanish'));
+  assert.ok(arranged.body.includes('First aid — 2025'));assert.ok(resumeHTML(arranged).includes('template-modern size-large'));assert.equal(resumeDesignClasses({template:'<script>'}),'template-classic size-standard spacing-normal');
 });

@@ -1,12 +1,17 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Commencely — Build a resume</title><link rel="stylesheet" href="/style.css"></head>
-<body><main>
+<body class="builder-page">
+<header class="builder-topbar resume-tools"><a class="builder-brand" href="/">Commencely</a><span>Resume builder</span><div><button type="button" id="top-download">Download PDF</button><a href="/resume">My resume</a></div></header>
+<main class="builder-workspace">
+<aside class="builder-sidebar resume-tools"><h2>Sections</h2>
+<nav id="builder-sections" aria-label="Resume sections"></nav>
+<div class="builder-checklist"><h2>Before you send it</h2><ul id="resume-checklist"></ul><p class="note">A guide to missing details, not a hiring score.</p></div>
+<a href="/support">Find local career support</a></aside>
+<div class="builder-editor">
 <div class="resume-tools">
-<p><a href="/resume">← Back to my resume</a></p><h1>Build your first resume</h1>
-<p>We’ll walk through what to include. Paid work isn’t required—school, volunteering, projects, and other responsibilities can help show what you can do.</p>
-<p id="builder-progress" role="status">Step 1 of 5 · About you</p>
+<div class="editor-heading"><h1>Build your resume</h1><p>Complete each section, then review and download.</p></div><p id="builder-progress" role="status">Step 1 of 5 · About you</p>
 <p id="builder-status" role="status">Your progress is not saved yet.</p>
-<button id="save-builder" type="button">Save progress on this browser</button>
+<button id="save-builder" type="button">Save now</button><p class="note">Progress saves automatically in this browser.</p>
 <form id="builder-form">
 <section data-step="0" aria-labelledby="about-title"><h2 id="about-title">About you</h2>
 <p>How should an employer contact you? A street address isn’t needed. Leave out any contact detail you don’t want to share.</p>
@@ -32,10 +37,15 @@
 <div id="projects-entries"></div><button data-add="projects" type="button">Add another project</button>
 <label for="builder-skills">What tools, languages, or practical skills can you use?</label><textarea id="builder-skills" name="skills" rows="5" maxlength="4000" aria-describedby="skills-help"></textarea>
 <p id="skills-help" class="note">Write one skill per line. Think about software you’ve used, a language you speak, equipment you can operate, or a task you can demonstrate. Add your level when helpful, such as “Excel — basic.”</p>
-</section>
+<details class="extra-sections"><summary>Add certifications, languages, or awards</summary>
+<label for="builder-certifications">Certifications (one per line)</label><textarea name="certifications" id="builder-certifications" rows="3" maxlength="4000" placeholder="Certificate name — issuer, year"></textarea>
+<label for="builder-languages">Languages (one per line)</label><textarea name="languages" id="builder-languages" rows="3" maxlength="4000" placeholder="Language — your proficiency"></textarea>
+<label for="builder-awards">Awards or activities (one per line)</label><textarea name="awards" id="builder-awards" rows="3" maxlength="4000" placeholder="Award or activity — organization, year"></textarea>
+</details></section>
 <section data-step="4" hidden aria-labelledby="review-title"><h2 id="review-title">Review your resume</h2>
 <p>We’ve arranged your answers, improved common task descriptions, and corrected common grammar, punctuation, and capitalization errors. Check every statement. Click any text in the preview to edit it directly. Save progress to keep your edits.</p>
 <button id="rebuild-wording" type="button">Rebuild wording from my answers</button>
+<button id="undo-wording" type="button" hidden>Undo last wording change</button>
 <button id="exact-wording" type="button">Use my exact answers</button>
 <p id="wording-feedback" role="status" aria-live="polite"></p>
 <div id="wording-confirmation" hidden>
@@ -45,12 +55,19 @@
 </div>
 <p id="builder-review-status" role="status"></p>
 <div id="resume-downloads">
+<button id="builder-pdf" type="button">Download PDF</button>
 <button id="builder-download" type="button">Download formatted resume (.html)</button>
 <button id="builder-print" type="button">Print / Save as PDF</button>
 <button id="builder-edit" type="button">Open full-text editor</button>
 </div>
 </section>
 <div class="builder-navigation"><button id="builder-back" type="button">Back</button><button id="builder-next" type="button">Next: Education</button></div>
-</form></div>
-<article id="resume-preview" class="resume-document" aria-label="Resume preview" hidden></article>
-</main><script type="module" src="/resume-build.js"></script></body></html>
+</form></div></div>
+<aside class="builder-preview-panel" aria-label="Live resume preview">
+<div class="preview-controls resume-tools"><div><h2>Live preview</h2><span>Click a line to edit your wording</span></div>
+<details id="design-options"><summary>Organize sections</summary>
+<h3>Sections</h3><p class="note">Hide or reorder sections without deleting your answers.</p><div id="layout-sections"></div>
+</details></div>
+<article id="resume-preview" class="resume-document" aria-label="Resume preview"></article>
+<p class="preview-footnote resume-tools">Your information stays in this browser. PDF downloads can continue onto additional pages.</p>
+</aside></main><script src="/vendor/jspdf.js"></script><script type="module" src="/resume-build.js"></script></body></html>
