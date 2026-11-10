@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Commencely — Monthly budget</title>
+  <link rel="stylesheet" href="/style.css?v=heritage">
+<link rel="stylesheet" href="/vendor/phosphor.css">
+</head>
+<body class="app-shell">
+<header class="app-header">
+  <div class="app-header-inner">
+    <a class="app-wordmark" href="/">Commencely</a>
+    <nav class="app-nav" aria-label="Main"><a href="/" data-destination="home"><i class="ph ph-house" aria-hidden="true"></i><span>Home</span></a><a href="/#jobs" data-destination="jobs"><i class="ph ph-magnifying-glass" aria-hidden="true"></i><span>Jobs</span></a><a href="/applications" data-destination="saved"><i class="ph ph-bookmark-simple" aria-hidden="true"></i><span>Saved</span></a><a href="/budget" data-destination="budget" aria-current="page"><i class="ph ph-calculator" aria-hidden="true"></i><span>Budget</span></a></nav>
+    <details class="app-menu">
+      <summary aria-label="More tools"><i class="ph ph-list" aria-hidden="true"></i></summary>
+      <nav aria-label="More tools"><a href="/resume">Résumé builder</a><a href="/support">Local support</a></nav>
+    </details>
+  </div>
+</header>
+<main class="app-main">
+<h1>Monthly budget</h1>
+<p class="page-intro">See what’s left after monthly expenses. Choose your household to fill in estimates, then adjust any amount.</p>
+<div class="budget-layout">
+<form id="budget-form">
+  <div class="budget-fields household-panel">
+  <label for="household">Household size</label>
+  <select id="household" name="household" aria-describedby="household-source">
+    <option value="1-0">1 person · 1 adult</option>
+    <option value="2-0">2 people · 2 adults</option>
+    <option value="1-1">2 people · 1 adult, 1 child</option>
+    <option value="2-1">3 people · 2 adults, 1 child</option>
+    <option value="1-2">3 people · 1 adult, 2 children</option>
+    <option value="2-2">4 people · 2 adults, 2 children</option>
+    <option value="1-3">4 people · 1 adult, 3 children</option>
+    <option value="2-3">5 people · 2 adults, 3 children</option>
+    <option value="custom">Other household · enter your amounts</option>
+  </select>
+  </div>
+  <fieldset class="budget-fields budget-group"><legend>Income</legend>
+  <label for="income">Annual gross income ($)</label>
+  <input id="income" name="income" type="number" min="0" max="1000000000" step="0.01" value="41579.20" required aria-describedby="income-source">
+  <label for="deductions">Estimated taxes and paycheck deductions (%)</label>
+  <input id="deductions" name="deductions" type="number" min="0" max="100" step="0.1" value="25" required aria-describedby="assumptions">
+  </fieldset>
+  <fieldset class="budget-fields budget-group"><legend>Monthly expenses</legend>
+  <label for="benchmark">Optional monthly housing estimate</label>
+  <select id="benchmark" name="housingBenchmark">
+    <option value="">Choose a HUD benchmark</option>
+    <option value="916">Studio · $916</option>
+    <option value="1056">One bedroom · $1,056</option>
+    <option value="1256">Two bedrooms · $1,256</option>
+    <option value="1739">Three bedrooms · $1,739</option>
+    <option value="2099">Four bedrooms · $2,099</option>
+  </select>
+  <label for="housing">Monthly rent and utilities ($)</label>
+  <input id="housing" name="housing" type="number" min="0" max="1000000000" step="0.01" aria-describedby="housing-source">
+  <label for="food">Monthly food ($)</label>
+  <input id="food" name="food" type="number" min="0" max="1000000000" step="0.01">
+  <label for="transport">Monthly transportation ($)</label>
+  <input id="transport" name="transport" type="number" min="0" max="1000000000" step="0.01">
+  <label for="other">Other monthly expenses ($)</label>
+  <input id="other" name="other" type="number" min="0" max="1000000000" step="0.01">
+  </fieldset>
+  <details id="advanced-budget">
+    <summary>Advanced options</summary>
+    <label><input type="checkbox" id="include-advanced" name="includeAdvanced"> Include advanced options in my budget</label>
+    <fieldset id="advanced-fields" class="budget-fields" disabled hidden>
+      <legend>Advanced budget inputs</legend>
+      <p class="note">Use an estimate to fill and include it, or enter your own amount and check its Include box. Uncheck any item to remove it from the total and keep the amount. Turning off advanced options keeps your entries for later and excludes them from the estimate.</p>
+      <label for="actual-pay">Actual take-home pay per paycheck ($)</label>
+      <input id="actual-pay" name="actualPay" type="number" min="0" max="1000000000" step="0.01">
+      <label for="pay-frequency">How often you receive that pay</label>
+      <select id="pay-frequency" name="payFrequency">
+        <option value="12">Monthly</option>
+        <option value="24">Twice a month</option>
+        <option value="26">Every two weeks</option>
+        <option value="52">Weekly</option>
+      </select>
+      <p class="note">Enter actual pay to use it for your monthly budget. Annual gross income above still drives the housing warning and the first offer estimate.</p>
+      <h2>Additional monthly expenses</h2>
+      <p class="note">Enter amounts here only if you haven’t already included them in Other monthly expenses.</p>
+      <label for="studentLoans">Student loan payments ($)</label>
+      <input id="studentLoans" name="studentLoans" type="number" min="0" max="1000000000" step="0.01">
+      <label for="childcare">Childcare ($)</label>
+      <input id="childcare" name="childcare" type="number" min="0" max="1000000000" step="0.01">
+      <button type="button" data-budget-estimate="childcare" data-label="childcare" hidden></button>
+      <label><input type="checkbox" name="childcareIncluded"> Include childcare in monthly expenses</label>
+      <label for="healthcare">Health care ($)</label>
+      <input id="healthcare" name="healthcare" type="number" min="0" max="1000000000" step="0.01">
+      <button type="button" data-budget-estimate="healthcare" data-label="health care" hidden></button>
+      <label><input type="checkbox" name="healthcareIncluded"> Include health care in monthly expenses</label>
+      <label for="phoneInternet">Phone and internet ($)</label>
+      <input id="phoneInternet" name="phoneInternet" type="number" min="0" max="1000000000" step="0.01">
+      <button type="button" data-budget-estimate="phoneInternet" data-label="phone and internet" hidden></button>
+      <label><input type="checkbox" name="phoneInternetIncluded"> Include phone and internet in monthly expenses</label>
+      <p id="estimate-feedback" class="note" role="status"></p>
+      <p class="note">Household estimates come from the <a href="https://livingwage.mit.edu/metros/22220">Living Wage Institute’s Northwest Arkansas model</a>. Childcare assumes all adults work. For health care, include only costs you haven’t already subtracted from pay.</p>
+      <label for="savings">Monthly savings target ($)</label>
+      <input id="savings" name="savings" type="number" min="0" max="1000000000" step="0.01">
+      <h2>Compare two job offers</h2>
+      <p class="note">Enter the first offer as annual gross income above and the second offer here. Both use the same deduction percentage, household expenses, and savings target.</p>
+      <label for="second-offer">Second offer annual gross pay ($)</label>
+      <input id="second-offer" name="secondOffer" type="number" min="0" max="1000000000" step="0.01">
+    </fieldset>
+  </details>
+  <button>Save budget</button>
+  <button type="button" id="restore-budget">Restore starting values</button>
+  <p id="budget-status" role="status"></p>
+</form>
+<article id="budget-results" aria-labelledby="budget-heading" aria-live="polite" hidden>
+  <h2 id="budget-heading">Monthly estimate</h2>
+  <p class="budget-balance"><strong id="remaining"></strong></p>
+  <p id="take-home"></p>
+  <p id="expenses"></p>
+  <p id="after-savings" hidden></p>
+  <p id="rent-warning"></p>
+  <div id="offer-comparison" hidden>
+    <table>
+      <caption>Monthly job offer comparison</caption>
+      <thead><tr><th scope="col">Monthly estimate</th><th scope="col">First offer</th><th scope="col">Second offer</th></tr></thead>
+      <tbody>
+        <tr><th scope="row">Take-home pay</th><td id="first-take-home"></td><td id="second-take-home"></td></tr>
+        <tr><th scope="row">Left after expenses and savings</th><td id="first-left"></td><td id="second-left"></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <details class="budget-sources"><summary>Estimate sources and assumptions</summary>
+    <p class="note" id="household-source">Choosing a household fills in food prepared at home, transportation, and rent with most utilities. These are modeled monthly costs for the Fayetteville–Springdale–Rogers metro. Enter your combined household pay above and adjust the costs below as needed. <a href="https://livingwage.mit.edu/metros/22220">Living Wage Institute, 2026</a></p>
+    <p class="note" id="income-source">Starting pay uses the Fayetteville–Springdale–Rogers metro’s median hourly wage of $19.99 across all occupations, multiplied by 2,080 hours for a full-time year. <a href="https://www.bls.gov/oes/2023/may/oes_22220.htm">BLS, May 2023</a></p>
+    <p class="note" id="assumptions">The 25% starting value is an editable planning assumption for all paycheck deductions combined. Use your own percentage if you know it. The estimate spreads annual pay evenly across 12 months.</p>
+    <p class="note" id="housing-source">For comparison, the metro’s overall median gross rent was $1,157 per month, including utilities. <a href="https://data.census.gov/table/ACSDT5Y2024.B25064?g=310XX00US22220">Census ACS, 2020–2024</a></p>
+    <p class="note">These FY 2027 Fair Market Rents cover the Fayetteville–Springdale–Rogers metro and include most tenant-paid utilities. Edit housing to reflect your own share of rent and utilities. <a href="https://www.huduser.gov/portal/datasets/fmr/fmr2027/FY2027_FMR_Schedule.pdf#page=2">HUD rent schedule</a></p>
+  </details>
+  <p class="note">The housing warning uses 30% of gross income as a planning benchmark. <a href="https://www.huduser.gov/portal/publications/pdf/National-CHMA-24.pdf">HUD housing affordability analysis</a></p>
+</article>
+</div>
+</main><script type="module" src="/budget.js?v=expense-opt-in"></script></body>
+</html>

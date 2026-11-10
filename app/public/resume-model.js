@@ -40,6 +40,11 @@ export const resumeStyles = `
 .resume-document.spacing-tight .resume-record{margin-bottom:8px}.resume-document.spacing-tight h2{margin-top:12px}
 .resume-document.spacing-relaxed .resume-record{margin-bottom:22px}.resume-document.spacing-relaxed h2{margin-top:25px}
 .resume-document{--resume-accent:#222}
+.resume-document.header-left .resume-header{text-align:left}
+.resume-document.header-center .resume-header{text-align:center}
+.resume-document.sections-ruled h2{border-bottom:1px solid var(--resume-accent);padding-bottom:4px}
+.resume-document.sections-label h2{background:color-mix(in srgb,var(--resume-accent) 10%,white);padding:5px 7px;letter-spacing:.08em}
+.resume-document.entries-lined .resume-record{border-left:1px solid var(--resume-accent);padding-left:10px}
 .resume-document.color-asphalt{--resume-accent:#43484c}
 .resume-document.color-taupe{--resume-accent:#8b7669}
 .resume-document.color-navy{--resume-accent:#243e67}
@@ -233,7 +238,7 @@ export function applyResumeEdits(model,edits={}){
 
 export const resumeSectionNames={profile:'Profile',education:'Education',experience:'Experience',projects:'Projects',skills:'Skills',certifications:'Certifications',languages:'Languages',awards:'Awards & honors',activities:'Activities',references:'References',importedText:'Imported details',customText:'Custom section'};
 export function resumeDesignClasses(design={}){
-  return ['template-'+(['classic','modern'].includes(design.font)?design.font:['classic','modern','compact'].includes(design.template)?design.template:'classic'),'size-'+(['small','standard','large'].includes(design.size)?design.size:'standard'),'spacing-'+(['tight','normal','relaxed'].includes(design.spacing)?design.spacing:'normal'),'color-'+(templateColors.some(color=>color.id===design.color)?design.color:'default'),design.graphics?'with-rules':'no-rules','margins-'+(['standard','narrow','wide'].includes(design.margins)?design.margins:'standard')].join(' ');
+  return ['template-'+(['classic','modern'].includes(design.font)?design.font:['classic','modern','compact'].includes(design.template)?design.template:'classic'),'size-'+(['small','standard','large'].includes(design.size)?design.size:'standard'),'spacing-'+(['tight','normal','relaxed'].includes(design.spacing)?design.spacing:'normal'),'color-'+(templateColors.some(color=>color.id===design.color)?design.color:'default'),design.graphics?'with-rules':'no-rules','margins-'+(['standard','narrow','wide'].includes(design.margins)?design.margins:'standard'),'header-'+(['left','center'].includes(design.headerAlign)?design.headerAlign:'center'),'sections-'+(['plain','ruled','label'].includes(design.sectionStyle)?design.sectionStyle:'plain'),'entries-'+(design.entryStyle==='lined'?'lined':'standard')].join(' ');
 }
 export function arrangeResume(model,layout={},design={}){
   const result=JSON.parse(JSON.stringify(model));

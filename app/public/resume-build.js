@@ -1,6 +1,6 @@
 import {downloadResumeWord} from './resume-word.js';
 import {initResumePicker} from './resume-picker.js';
-import {templateDesign} from './resume-templates.js';
+import {templateDesign,resumeTemplates,careerFields} from './resume-templates.js';
 import {readResumeText,keepOriginalResume,parseResumeText} from './resume-import.js';
 import {findSkills,appendSkill,summarySuggestions} from './resume-guidance.js';
 import {downloadResumePDF} from './resume-pdf.js';
@@ -9,11 +9,13 @@ const style=document.createElement('style');style.textContent=resumeStyles;docum
 const form=document.querySelector('#builder-form');
 const status=document.querySelector('#builder-status');
 const storageKey='commencely-builder-v1';
+const sectionSlugs=['cntc','expr','educ','skil','summ','addl','final'];
+function stageURL(value,index=step){return value==='wizard'?'/build-resume/section/'+sectionSlugs[index]:({entry:'/build-resume/start',intro:'/build-resume',templates:'/build-resume/choose-template',choice:'/build-resume/select-resume',loading:'/build-resume'}[value]||'/resume/build');}
 const steps=['Header','Experience','Education','Skills','Summary','Additional details','Finalize'];
 const stepCopy=[['Let’s start with your header','Include your full name and ways for employers to reach you.'],['Let’s work on your experience','Start with your most recent experience. Paid work, volunteering, and other responsibilities count.'],['Add your education and training','Include courses or programs you have attended, even if unfinished.'],['Choose your skills','Select skills that fit the work you want to do.'],['Craft your summary','Use your own words or choose an option based on your answers.'],['Add optional details','Choose what else you’d like an employer to know.'],['Review and finish','Check the details, edit your wording, and download your resume.']];
 const answerFields=['firstName','lastName','city','state','zip','email','phone','link','summary','skills','certifications','languages','awards','activities','references','importedText','customTitle','customText'];
 let selectedExtras=[];let educationLevel='';
-let stage='intro';let filters={};let maxStep=0;let changingTemplate=false;let photo='';let pickerUI;let importedFile=null;
+let stage='entry';let preferredBuildMode='new';let filters={};let maxStep=0;let changingTemplate=false;let photo='';let pickerUI;let importedFile=null;
 
 const fields={
   education:[['school','School name'],['location','School location (optional)'],['qualification','Degree or qualification'],['fieldOfStudy','Field of study (optional)'],['dates','When did you attend or expect to finish?'],['notes','Any relevant courses, awards, or achievements? (optional)','textarea','Include only details you want on your resume.']],
@@ -29,7 +31,7 @@ let layout={order:Object.keys(resumeSectionNames),hidden:[]};
 let design={template:'classic',size:'standard',spacing:'normal'};
 let autosaveTimer;let ready=false;let previousWording=null;
 const preview=document.querySelector('#resume-preview');
-function snapshot(){return {...answers(),_previewEdits:previewEdits,_wordingMode:wordingMode,_layout:layout,_design:design,_selectedExtras:selectedExtras,_educationLevel:educationLevel,_stage:stage,_filters:filters,_step:step,_maxStep:maxStep,_photo:photo};}
+function snapshot(){return {...answers(),_previewEdits:previewEdits,_wordingMode:wordingMode,_layout:layout,_design:design,_selectedExtras:selectedExtras,_educationLevel:educationLevel,_stage:stage,_filters:filters,_step:step,_maxStep:maxStep,_photo:photo,_buildMode:preferredBuildMode};}
 function currentResume(mode=wordingMode,edits=previewEdits){
   const values=answers();if(!selectedExtras.includes('link'))values.link='';
   const hidden=[...layout.hidden,...['projects','certifications','languages','awards','activities','references','importedText','customText'].filter(key=>!selectedExtras.includes(key))];
@@ -91,8 +93,8 @@ function render(){
 }
 
 function showStep(next,focus=true){
-  if(next>maxStep)return;step=next;if(stage==='wizard')history.replaceState(null,'','#section-'+step);
-  for(const button of document.querySelectorAll('[data-go-step]')){const active=Number(button.dataset.goStep)===step;button.setAttribute('aria-current',active?'step':'false');button.disabled=Number(button.dataset.goStep)>maxStep;button.title=steps[Number(button.dataset.goStep)]+(button.disabled?' — complete the preceding section first':'');}
+  if(next>maxStep)return;step=next;if(stage==='wizard')history.replaceState(null,'',stageURL('wizard',step));
+  for(const button of document.querySelectorAll('[data-go-step]')){const active=Number(button.dataset.goStep)===step;button.setAttribute('aria-current',active?'step':'false');button.disabled=Number(button.dataset.goStep)>maxStep;button.classList.toggle('is-complete',Number(button.dataset.goStep)<maxStep);button.title=steps[Number(button.dataset.goStep)]+(button.disabled?' — complete the preceding section first':'');}
   for(const panel of document.querySelectorAll('[data-step]'))panel.hidden=Number(panel.dataset.step)!==step;
   document.querySelector('#builder-progress').textContent=`Step ${step+1} of ${steps.length} · ${steps[step]}`;
   document.querySelector('#builder-back').hidden=false;document.querySelector('#builder-next').hidden=step===steps.length-1;
@@ -145,11 +147,14 @@ if(saved&&typeof saved==='object'&&!Array.isArray(saved)){
 
   for(const key of Object.keys(resumeSectionNames))if(!layout.order.includes(key))layout.order.push(key);
   if(saved._design&&typeof saved._design==='object')design=templateDesign(saved._design.templateId||saved._design.template,saved._design.color,{size:saved._design.size||'standard',spacing:saved._design.spacing||'normal',margins:saved._design.margins||'standard',font:saved._design.font});
-  stage=['intro','templates','choice','wizard'].includes(saved._stage)?saved._stage:'intro';filters=saved._filters&&typeof saved._filters==='object'?saved._filters:{};
+  stage=['entry','intro','templates','choice','wizard'].includes(saved._stage)?saved._stage:'entry';preferredBuildMode=saved._buildMode==='import'?'import':'new';filters=saved._filters&&typeof saved._filters==='object'?saved._filters:{};
   maxStep=Number.isInteger(saved._maxStep)?Math.max(0,Math.min(6,saved._maxStep)):0;step=Number.isInteger(saved._step)?Math.max(0,Math.min(maxStep,saved._step)):0;
   photo=typeof saved._photo==='string'?saved._photo:'';
   savedAnswers=JSON.stringify(snapshot());status.textContent='Your saved answers are ready. Continue through the steps to review your resume.';
 }else for(const kind of Object.keys(fields))addEntry(kind);
+const routeStage={'/build-resume/start':'entry','/build-resume':'intro','/build-resume/choose-template':'templates','/build-resume/select-resume':'choice'}[location.pathname];
+if(routeStage)stage=routeStage;
+const routeSection=sectionSlugs.indexOf(location.pathname.split('/').at(-1));if(location.pathname.startsWith('/build-resume/section/')&&routeSection>=0){stage='wizard';step=Math.min(routeSection,maxStep);}
 preview.addEventListener('input',event=>{
   const node=event.target.closest('[data-resume-path]');if(!node)return;
   previewEdits[node.dataset.resumePath]=node.innerText.trim();queueAutosave();
@@ -187,7 +192,7 @@ document.querySelector('#exact-wording').addEventListener('click',()=>requestWor
 document.querySelector('#confirm-wording').addEventListener('click',()=>{if(pendingWording)applyWording(pendingWording);});
 document.querySelector('#cancel-wording').addEventListener('click',()=>{pendingWording=null;wordingConfirmation.hidden=true;feedback('Your preview edits were kept. Nothing was replaced.');});
 for(const [index,name] of steps.entries()){
-  const button=document.createElement('button');button.type='button';button.dataset.goStep=index;const number=document.createElement('span');number.className='step-number';number.textContent=String(index+1);const label=document.createElement('span');label.className='step-label';label.textContent=name;button.append(number,label);button.setAttribute('aria-label',String(index+1)+' '+name);
+  const button=document.createElement('button');button.type='button';button.dataset.goStep=index;const number=document.createElement('span');number.className='step-number';number.innerHTML='<span>'+String(index+1)+'</span><i class="ph ph-check" aria-hidden="true"></i>';const label=document.createElement('span');label.className='step-label';label.textContent=name;button.append(number,label);button.setAttribute('aria-label',String(index+1)+' '+name);
   button.addEventListener('click',()=>showStep(index));document.querySelector('#builder-sections').append(button);
 }
 
@@ -313,15 +318,17 @@ function setStage(next,newFilters){
   if(newFilters)filters=newFilters;
   if(next)stage=next;
   document.querySelector('#builder-start').hidden=stage==='wizard';document.querySelector('#wizard-shell').hidden=stage!=='wizard';
-  for(const [key,id] of [['intro','builder-intro'],['templates','template-picker'],['choice','build-choice']])document.getElementById(id).hidden=stage!==key;
-  if(next){history.replaceState(null,'','#'+(stage==='wizard'?'section-'+step:stage));window.scrollTo({top:0});}
+  for(const [key,id] of [['entry','builder-entry'],['loading','builder-loading'],['intro','builder-intro'],['templates','template-picker'],['choice','build-choice']])document.getElementById(id).hidden=stage!==key;
+  document.body.dataset.stage=stage;
+  if(stage==='choice'){document.querySelector('[name="build-mode"][value="'+preferredBuildMode+'"]').checked=true;document.querySelector('#import-options').hidden=preferredBuildMode!=='import';}
+  if(next){history.replaceState(null,'',stageURL(stage,step));window.scrollTo({top:0});}
   queueAutosave();
 }
 function downloadText(){const url=URL.createObjectURL(new Blob([resumeText(currentResume())],{type:'text/plain;charset=utf-8'}));const link=document.createElement('a');link.href=url;link.download='Commencely-resume.txt';link.click();setTimeout(()=>URL.revokeObjectURL(url),60000);}
 document.querySelector('#builder-text').addEventListener('click',downloadText);
 document.querySelector('#change-template').addEventListener('click',()=>{changingTemplate=true;setStage('templates');pickerUI.render();});
 document.querySelector('#choice-back').addEventListener('click',()=>setStage('templates'));
-for(const input of document.querySelectorAll('[name="build-mode"]'))input.addEventListener('change',()=>{document.querySelector('#import-options').hidden=document.querySelector('[name="build-mode"]:checked').value!=='import';});
+for(const input of document.querySelectorAll('[name="build-mode"]'))input.addEventListener('change',()=>{preferredBuildMode=input.value;document.querySelector('#import-options').hidden=document.querySelector('[name="build-mode"]:checked').value!=='import';});
 document.querySelector('#builder-import-file').addEventListener('change',async event=>{
   const file=event.target.files[0];if(!file)return;const status=document.querySelector('#import-status');status.textContent='Reading your file locally…';
   try{const text=await readResumeText(file);if(!text.trim())throw new Error('No selectable text was found. Paste your resume text below instead.');if(text.length>50000)throw new Error('This resume has more than 50,000 characters. Paste the sections you need below.');document.querySelector('#import-review').value=text;importedFile=file;status.textContent='Text ready. Review it, then continue. Your original file will be kept unchanged.';}
@@ -357,3 +364,11 @@ ready=true;setStage(stage);showStep(step,false);
 document.querySelector('#builder-word').addEventListener('click',async()=>{try{await downloadResumeWord(currentResume());status.textContent='Word download requested.';}catch{status.textContent='Could not create the Word file. PDF and text downloads are available.';}});
 
 document.querySelector('#top-preview').addEventListener('click',()=>document.querySelector('#zoom-preview').click());
+
+async function beginBuilder(mode){preferredBuildMode=mode;setStage('loading');document.querySelector('#builder-loading-counts').textContent=resumeTemplates.length+' original templates · '+careerFields.length+' career fields · 9 color options';await document.fonts.ready;setStage('intro');}
+document.querySelector('#entry-create').addEventListener('click',()=>beginBuilder('new'));
+document.querySelector('#entry-import').addEventListener('click',()=>beginBuilder('import'));
+document.querySelector('#entry-resume').hidden=!saved;
+document.querySelector('#entry-resume').addEventListener('click',()=>{setStage('wizard');showStep(step,false);});
+document.querySelector('#fullscreen-change-template').addEventListener('click',()=>{previewDialog.close();changingTemplate=true;setStage('templates');pickerUI.render();});
+document.querySelector('#add-extra-section').addEventListener('click',()=>{document.querySelector('#additional-options').hidden=false;document.querySelector('#additional-options input')?.focus();});

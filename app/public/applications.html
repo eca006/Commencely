@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Commencely — Saved jobs</title>
+  <link rel="stylesheet" href="/style.css?v=heritage">
+<link rel="stylesheet" href="/vendor/phosphor.css">
+</head>
+<body class="app-shell">
+<header class="app-header">
+  <div class="app-header-inner">
+    <a class="app-wordmark" href="/">Commencely</a>
+    <nav class="app-nav" aria-label="Main"><a href="/" data-destination="home"><i class="ph ph-house" aria-hidden="true"></i><span>Home</span></a><a href="/#jobs" data-destination="jobs"><i class="ph ph-magnifying-glass" aria-hidden="true"></i><span>Jobs</span></a><a href="/applications" data-destination="saved" aria-current="page"><i class="ph ph-bookmark-simple" aria-hidden="true"></i><span>Saved</span></a><a href="/budget" data-destination="budget"><i class="ph ph-calculator" aria-hidden="true"></i><span>Budget</span></a></nav>
+    <details class="app-menu">
+      <summary aria-label="More tools"><i class="ph ph-list" aria-hidden="true"></i></summary>
+      <nav aria-label="More tools"><a href="/resume">Résumé builder</a><a href="/support">Local support</a></nav>
+    </details>
+  </div>
+</header>
+<main class="app-main">
+<h1>Saved jobs</h1>
+<p>Save jobs from the search results, then update each application as you go. Your list is saved in this browser.</p>
+<p id="application-status" role="status"></p>
+<section id="saved-jobs" aria-label="Saved job listings"></section>
+</main><script type="module" src="/applications.js"></script></body>
+</html>

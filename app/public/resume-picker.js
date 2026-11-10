@@ -2,13 +2,14 @@ import {resumeTemplates,templateColors,careerFields,filterTemplates,templateDesi
 import {resumeMarkup,resumeDesignClasses} from './resume-model.js';
 export function initResumePicker({filters={},getDesign,setDesign,onChoose,onStage}){
   const state={hasPhoto:'',hasGraphics:'',columns:'',fields:[],...filters};
-  let filtered=[],previewIndex=0,recommendationStep=0;
+  let filtered=[],previewIndex=0,recommendationStep=-1;
+  let pickCounts={};try{pickCounts=JSON.parse(localStorage.getItem('commencely-template-picks-v1'))||{};}catch{}
   const previewDialog=document.querySelector('#template-dialog');
   const recommendations=document.querySelector('#recommendation-dialog');
   const palette=()=>getDesign().color||'default';
   function colors(container){
     container.replaceChildren();
-    for(const color of templateColors){const button=document.createElement('button');button.type='button';button.className='color-swatch';button.style.backgroundColor=color.hex;button.title=color.name;button.setAttribute('aria-label',color.name);button.setAttribute('aria-pressed',String(palette()===color.id));button.addEventListener('click',()=>{setDesign({...getDesign(),color:color.id});render();if(previewDialog.open)renderPreview();if(recommendations.open)renderRecommendation();});container.append(button);}
+    for(const color of templateColors){const button=document.createElement('button');button.type='button';button.className='color-swatch';button.style.backgroundColor=color.hex;button.title=color.name;button.setAttribute('aria-label',color.name);button.setAttribute('aria-pressed',String(palette()===color.id));button.innerHTML='<i class="ph ph-check" aria-hidden="true"></i>';if(color.id==='default')button.classList.add('white-swatch');button.addEventListener('click',()=>{setDesign({...getDesign(),color:color.id});render();if(previewDialog.open)renderPreview();if(recommendations.open)renderRecommendation();});container.append(button);}
   }
   function render(){
     filtered=filterTemplates(state);
@@ -16,7 +17,7 @@ export function initResumePicker({filters={},getDesign,setDesign,onChoose,onStag
     colors(document.querySelector('#picker-colors'));
     document.querySelector('#template-count').textContent='Showing '+filtered.length+' template'+(filtered.length===1?'':'s');
     const chips=document.querySelector('#active-template-filters');chips.replaceChildren();
-    const labels={hasPhoto:state.hasPhoto==='true'?'With photo':'Without photo',hasGraphics:state.hasGraphics==='true'?'With section rules':'Without section rules',columns:state.columns+' column'+(state.columns==='2'?'s':'')};
+    const labels={hasPhoto:state.hasPhoto==='true'?'With photo':'Without photo',hasGraphics:state.hasGraphics==='true'?'With graphics':'Without graphics',columns:state.columns+' column'+(state.columns==='2'?'s':'')};
     for(const key of ['hasPhoto','hasGraphics','columns'])if(state[key]){const button=document.createElement('button');button.type='button';button.textContent='Remove '+labels[key];button.addEventListener('click',()=>{state[key]='';render();});chips.append(button);}
     for(const field of state.fields){const button=document.createElement('button');button.type='button';button.textContent='Remove '+field;button.addEventListener('click',()=>{state.fields=state.fields.filter(item=>item!==field);render();});chips.append(button);}
     if(chips.children.length){const clear=document.createElement('button');clear.type='button';clear.textContent='Clear all filters';clear.addEventListener('click',clearFilters);chips.append(clear);}
@@ -25,18 +26,18 @@ export function initResumePicker({filters={},getDesign,setDesign,onChoose,onStag
     filtered.forEach((template,index)=>{
       const card=document.createElement('div');card.className='template-card';
       const paper=document.createElement('div');paper.className='template-thumbnail resume-document '+resumeDesignClasses(templateDesign(template.id,palette()));paper.innerHTML=resumeMarkup({...templateSample,design:templateDesign(template.id,palette())});paper.setAttribute('aria-hidden','true');
-      const preview=document.createElement('button');preview.type='button';preview.className='template-preview-button';preview.textContent='Preview';preview.setAttribute('aria-label','Preview '+template.name);preview.addEventListener('click',()=>{previewIndex=index;renderPreview();previewDialog.showModal();});
-      const choose=document.createElement('button');choose.type='button';choose.textContent='Choose template';choose.setAttribute('aria-label','Choose '+template.name+' template');choose.addEventListener('click',()=>chooseTemplate(template));card.append(paper,preview,choose);grid.append(card);
+      const preview=document.createElement('button');preview.type='button';preview.className='template-preview-button';preview.innerHTML='<i class="ph ph-magnifying-glass-plus" aria-hidden="true"></i>';preview.setAttribute('aria-label','Preview '+template.name);preview.addEventListener('click',()=>{previewIndex=index;renderPreview();previewDialog.showModal();});
+      const choose=document.createElement('button');choose.type='button';choose.className='choose-template-button';choose.textContent='Choose template';choose.setAttribute('aria-label','Choose '+template.name+' template');choose.addEventListener('click',()=>chooseTemplate(template));card.append(paper,preview,choose);grid.append(card);
     });
     onStage(null,{...state,fields:[...state.fields]});
   }
   function clearFilters(){Object.assign(state,{hasPhoto:'',hasGraphics:'',columns:'',fields:[]});render();}
-  function chooseTemplate(template){setDesign(templateDesign(template.id,palette(),getDesign()));if(previewDialog.open)previewDialog.close();onChoose();}
+  function chooseTemplate(template){pickCounts[template.id]=(Number(pickCounts[template.id])||0)+1;try{localStorage.setItem('commencely-template-picks-v1',JSON.stringify(pickCounts));}catch{}setDesign(templateDesign(template.id,palette(),getDesign()));if(previewDialog.open)previewDialog.close();onChoose();}
   function renderPreview(){
     if(!filtered.length)return;previewIndex=(previewIndex+filtered.length)%filtered.length;
     const template=filtered[previewIndex];const design=templateDesign(template.id,palette());
     document.querySelector('#template-position').textContent=(previewIndex+1)+' of '+filtered.length;
-    document.querySelector('#template-dialog-title').textContent=template.name;document.querySelector('#template-tags').textContent=template.tags.join(' · ');
+    document.querySelector('#template-dialog-title').textContent=template.name;document.querySelector('#template-local-picks').textContent=pickCounts[template.id]?'Chosen '+pickCounts[template.id]+' time'+(pickCounts[template.id]===1?'':'s')+' in this browser':'Not yet chosen in this browser';document.querySelector('#template-tags').textContent=template.tags.join(' · ');
     const paper=document.querySelector('#template-large');paper.className='resume-document '+resumeDesignClasses(design);paper.innerHTML=resumeMarkup({...templateSample,design});
     const details=document.querySelector('#template-details');details.replaceChildren();
     for(const text of [template.columns+' column'+(template.columns===2?'s':''),'Editable text and section order','Selectable text in PDF exports','PDF, Word, HTML, and TXT downloads',template.hasPhoto?'Optional photo area; add your own photo':'No photo']){const item=document.createElement('li');item.textContent=text;details.append(item);}colors(document.querySelector('#modal-colors'));
@@ -44,16 +45,20 @@ export function initResumePicker({filters={},getDesign,setDesign,onChoose,onStag
   for(const [key,id] of [['hasPhoto','filter-photo'],['hasGraphics','filter-graphics'],['columns','filter-columns']])document.getElementById(id).addEventListener('change',event=>{state[key]=event.target.value;render();});
   document.querySelector('#template-previous').addEventListener('click',()=>{previewIndex--;renderPreview();});document.querySelector('#template-next').addEventListener('click',()=>{previewIndex++;renderPreview();});
   document.querySelector('#close-template-preview').addEventListener('click',()=>previewDialog.close());document.querySelector('#use-template').addEventListener('click',()=>chooseTemplate(filtered[previewIndex]));
-  document.querySelector('#intro-continue').addEventListener('click',()=>{onStage('templates');render();recommendationStep=0;renderRecommendation();recommendations.showModal();});document.querySelector('#picker-back').addEventListener('click',()=>onStage('intro'));
+  document.querySelector('#intro-continue').addEventListener('click',()=>{onStage('templates');render();recommendationStep=-1;renderRecommendation();recommendations.showModal();});document.querySelector('#picker-back').addEventListener('click',()=>onStage('intro'));
   document.querySelector('#open-recommendations').addEventListener('click',()=>{recommendationStep=0;renderRecommendation();recommendations.showModal();});
   for(const id of ['close-recommendations','recommendation-skip'])document.getElementById(id).addEventListener('click',()=>recommendations.close());
   document.querySelector('#recommendation-back').addEventListener('click',()=>{recommendationStep=Math.max(0,recommendationStep-1);renderRecommendation();});
   document.querySelector('#recommendation-next').addEventListener('click',()=>{if(recommendationStep===3){recommendations.close();return;}recommendationStep++;renderRecommendation();});
   function renderRecommendation(){
-    document.querySelector('#recommendation-progress').textContent='Question '+(recommendationStep+1)+' of 4';document.querySelector('#recommendation-back').disabled=recommendationStep===0;document.querySelector('#recommendation-next').textContent=recommendationStep===3?'Show results':'Next';
+    document.querySelector('#recommendation-progress').textContent=recommendationStep<0?'Optional recommendations':'Question '+(recommendationStep+1)+' of 4';
+    const dots=document.querySelector('#recommendation-dots');dots.replaceChildren();for(let i=0;i<4;i++){const dot=document.createElement('span');dot.className=i===recommendationStep?'active':'';dots.append(dot);}dots.hidden=recommendationStep<0;
+    document.querySelector('#recommendation-back').hidden=recommendationStep<0;document.querySelector('#recommendation-next').hidden=recommendationStep<0;
+document.querySelector('#recommendation-back').disabled=recommendationStep===0;document.querySelector('#recommendation-next').textContent=recommendationStep===3?'Show results':'Next';
     const content=document.querySelector('#recommendation-content');content.replaceChildren();const heading=document.createElement('h3');heading.textContent=['Pick a color','Include a photo?','Choose a layout','What fields interest you?'][recommendationStep];content.append(heading);
+    if(recommendationStep<0){heading.textContent='Would you like help choosing a template?';const note=document.createElement('p');note.textContent='Answer four quick questions, or browse all templates yourself.';const yes=document.createElement('button');yes.type='button';yes.className='primary-button';yes.textContent='Yes, help me choose';yes.addEventListener('click',()=>{recommendationStep=0;renderRecommendation();});const no=document.createElement('button');no.type='button';no.className='text-button';no.textContent='No thanks, I’ll browse';no.addEventListener('click',()=>recommendations.close());content.append(note,yes,no);}
     if(recommendationStep===0){const note=document.createElement('p');note.textContent='You can change colors anytime.';const options=document.createElement('div');options.className='color-options';colors(options);content.append(note,options);}
-    if(recommendationStep===1||recommendationStep===2){const key=recommendationStep===1?'hasPhoto':'columns';const choices=recommendationStep===1?[['true','With an optional photo'],['false','Without a photo']]:[['1','One column — a single reading order'],['2','Two columns — a side column for skills and extras']];for(const [value,label] of choices){const button=document.createElement('button');button.type='button';button.textContent=label;button.setAttribute('aria-pressed',String(state[key]===value));button.addEventListener('click',()=>{state[key]=value;render();renderRecommendation();});content.append(button);}}
+    if(recommendationStep===1||recommendationStep===2){const key=recommendationStep===1?'hasPhoto':'columns';const choices=recommendationStep===1?[['true','With an optional photo'],['false','Without a photo']]:[['1','One column — a single reading order'],['2','Two columns — a side column for skills and extras']];for(const [value,label] of choices){const button=document.createElement('button');button.type='button';button.textContent=label;button.setAttribute('aria-pressed',String(state[key]===value));const icon=document.createElement('i');icon.className='ph '+(recommendationStep===1?(value==='true'?'ph-user-square':'ph-file-text'):(value==='1'?'ph-text-columns':'ph-columns'));icon.setAttribute('aria-hidden','true');button.prepend(icon);button.addEventListener('click',()=>{state[key]=value;render();renderRecommendation();});content.append(button);}}
     if(recommendationStep===3){const list=document.createElement('div');list.className='career-field-list';for(const field of careerFields){const label=document.createElement('label');const checkbox=document.createElement('input');checkbox.type='checkbox';checkbox.checked=state.fields.includes(field);label.append(checkbox,document.createTextNode(field));checkbox.addEventListener('change',()=>{state.fields=checkbox.checked?[...state.fields,field]:state.fields.filter(item=>item!==field);render();});list.append(label);}content.append(list);}
   }
   render();return {render,getFilters:()=>({...state,fields:[...state.fields]})};

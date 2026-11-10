@@ -11,6 +11,7 @@
     "node": ">=24"
   },
   "dependencies": {
+    "@phosphor-icons/web": "^2.1.2",
     "docx": "^9.15.0",
     "jspdf": "^4.2.1",
     "mammoth": "^1.13.0",

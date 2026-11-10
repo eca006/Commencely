@@ -13,7 +13,9 @@ Run `npm test` to check response handling. To verify live integration, search ma
 
 This version includes a three-question interest questionnaire, three explained career directions, browser-local saved answers with a clear control, and job searches for each direction. Each answer contributes one point to the corresponding direction; equal scores are ties. These are exploratory interest suggestions, not qualification assessments or a validated career test.
 
-Job search supports a single page of up to ten results, loading/error/empty states, and listing links. Personalized qualification matching, budget, and tracking are later steps. Salary fields are excluded. Confirm current Adzuna display requirements before publishing.
+Job search supports a single page of up to ten results, loading/error/empty states, and listing links. Personalized qualification matching is a later step. Salary fields are excluded. Confirm current Adzuna display requirements before publishing.
+
+Use Budget to estimate monthly take-home pay from annual gross pay and an editable paycheck deduction percentage. Choose a HUD housing benchmark or enter your own rent and utilities, then add monthly expenses. Use Save job on a result to open it later from Saved jobs and update its application status manually. Budget and tracker data are saved in the current browser.
 
 Career-direction searches review up to 50 listings and apply basic title relevance and clinical-role exclusions before displaying up to ten. Counts refer to this sample. Title filtering does not establish qualifications or entry-level suitability. Editing keywords returns to a general search; changing location preserves the direction. Run `node --env-file=.env check-live.mjs` for a credential-safe live search check.
 

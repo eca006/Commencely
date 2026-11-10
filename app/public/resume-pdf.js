@@ -10,7 +10,7 @@ export function createResumePDF(model,JsPDF){
   const margin=design.margins==='narrow'?12:design.margins==='wide'?24:18;
   const fullLeft=margin,fullRight=216-margin,bottom=279-margin;
   let left=fullLeft,right=fullRight,width=right-left;
-  const accent=templateColors.find(color=>color.id===design.color)?.hex||'#222222';
+  const accent=design.color==='default'||!design.color?'#222222':templateColors.find(color=>color.id===design.color)?.hex||'#222222';
   let y=19;
   const clean=text=>String(text||'').replace(/\t/g,' ').replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f]/g,'');
   function room(height){if(y+height>bottom){const page=pdf.getCurrentPageInfo().pageNumber+1;if(page>pdf.getNumberOfPages())pdf.addPage();else pdf.setPage(page);y=19;}}
@@ -23,14 +23,14 @@ export function createResumePDF(model,JsPDF){
   }
   if(design.hasPhoto&&safeResumePhoto(model.photo)){pdf.addImage(model.photo,model.photo.startsWith('data:image/png')?'PNG':'JPEG',98,y,20,20);y+=24;}
   pdf.setTextColor(accent);
-  text(model.name,{bold:true,pt:22,align:design.template==='modern'?'left':'center'});
+  text(model.name,{bold:true,pt:22,align:design.headerAlign||(design.template==='modern'?'left':'center')});
   pdf.setTextColor('#111111');
-  y+=1;text(model.contact,{pt:9,align:design.template==='modern'?'left':'center'});y+=4;
+  y+=1;text(model.contact,{pt:9,align:design.headerAlign||(design.template==='modern'?'left':'center')});y+=4;
   pdf.setDrawColor(accent);pdf.line(left,y,right,y);y+=3;
   const startY=y;const startPage=pdf.getCurrentPageInfo().pageNumber;
   function drawSections(sections){for(const section of sections){
     room(18);y+=gap;pdf.setTextColor(accent);text(section.title,{bold:true,pt:11});pdf.setTextColor('#111111');
-    if(design.graphics){pdf.setDrawColor(accent);pdf.line(left,y,right,y);y+=4;}y+=1;
+    if(design.graphics||design.sectionStyle==='ruled'){pdf.setDrawColor(accent);pdf.line(left,y,right,y);y+=4;}y+=1;
     for(const entry of section.entries){
       room(15);
       pdf.setFont(font,'bold');pdf.setFontSize(size);

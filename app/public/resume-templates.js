@@ -1,11 +1,11 @@
 export const templateColors=[
-  {id:'default',name:'Black and white',hex:'#222222'}, {id:'asphalt',name:'Asphalt',hex:'#43484c'},
+  {id:'default',name:'White / default',hex:'#ffffff'}, {id:'asphalt',name:'Asphalt',hex:'#43484c'},
   {id:'taupe',name:'Taupe',hex:'#8b7669'}, {id:'navy',name:'Navy',hex:'#243e67'},
   {id:'blue',name:'Blue',hex:'#356baf'}, {id:'teal',name:'Teal',hex:'#167b85'},
   {id:'emerald',name:'Emerald',hex:'#286b54'}, {id:'gold',name:'Gold',hex:'#93651e'}, {id:'red',name:'Red',hex:'#a53540'}
 ];
 export const careerFields=['Business & Finance','Healthcare','Tech & Data Science','Education','Legal','Sales','Management','Transport','Hospitality','Retail','Construction','Manufacturing','Creative & Design','Customer Service','Administration','Science','Public Service','Social Services','Agriculture','Student & Entry Level','Other'];
-export const resumeTemplates=[
+const baseTemplates=[
   {id:'classic',name:'Clear',tags:['Traditional','Simple'],hasPhoto:false,hasGraphics:false,columns:1,fields:['Business & Finance','Legal','Education','Administration'],font:'classic'},
   {id:'modern',name:'Outline',tags:['Modern','Simple'],hasPhoto:false,hasGraphics:true,columns:1,fields:['Tech & Data Science','Management','Sales'],font:'modern'},
   {id:'compact',name:'Essential',tags:['Compact','Simple'],hasPhoto:false,hasGraphics:false,columns:1,fields:['Student & Entry Level','Retail','Hospitality'],font:'compact'},
@@ -15,6 +15,11 @@ export const resumeTemplates=[
   {id:'portrait-column',name:'Profile columns',tags:['Photo optional','Two columns'],hasPhoto:true,hasGraphics:true,columns:2,fields:['Creative & Design','Sales','Hospitality'],font:'modern'},
   {id:'serif-rule',name:'Academic',tags:['Traditional','Section rules'],hasPhoto:false,hasGraphics:true,columns:1,fields:['Education','Science','Public Service','Student & Entry Level'],font:'classic'}
 ];
+const extraNames=['Ledger','Focus','Linework','Harbor','Studio','Civic','Precision','Foundation','Clarity','Canvas','Meridian','Campus','Practice','Craft','Horizon','Summit','Compass','Fieldwork','Metro','Vantage','Brief','Chapter','Workshop','Bridge','Signal','Keystone','Portfolio'];
+export const resumeTemplates=[...baseTemplates,...extraNames.map((name,index)=>{
+ const base=baseTemplates[index%baseTemplates.length];
+ return {...base,id:'layout-'+(index+1),name,tags:[index%2?'Contemporary':'Traditional',index%3===0?'Compact':'Balanced'],headerAlign:index%2?'left':'center',sectionStyle:['plain','ruled','label'][Math.floor(index/2)%3],entryStyle:index%2?'lined':'standard',font:['classic','modern','compact'][Math.floor(index/4)%3],fields:[careerFields[index%careerFields.length],...base.fields]};
+})];
 export function filterTemplates(filters={}){
   return resumeTemplates.filter(template=>
     (!filters.hasPhoto||String(template.hasPhoto)===filters.hasPhoto)&&
@@ -26,7 +31,7 @@ export function filterTemplates(filters={}){
 export function templateDesign(id='classic',color='default',settings={}){
   const template=resumeTemplates.find(item=>item.id===id)||resumeTemplates[0];
   const palette=templateColors.find(item=>item.id===color)||templateColors[0];
-  return {...settings,template:template.font,templateId:template.id,color:palette.id,columns:template.columns,graphics:template.hasGraphics,hasPhoto:template.hasPhoto};
+  return {...settings,template:template.font,templateId:template.id,color:palette.id,columns:template.columns,graphics:template.hasGraphics,hasPhoto:template.hasPhoto,headerAlign:template.headerAlign|| (template.font==='classic'?'center':'left'),sectionStyle:template.sectionStyle|| (template.hasGraphics?'ruled':'plain'),entryStyle:template.entryStyle||'standard'};
 }
 export const templateSample={name:'Jordan Morgan',contact:'Fayetteville, AR | jordan@example.test | 479-555-0123',sections:[
   {key:'profile',title:'SUMMARY',entries:[{key:0,text:'Business student with experience organizing community events and helping visitors. Skills include scheduling, Excel, and clear communication.'}]},

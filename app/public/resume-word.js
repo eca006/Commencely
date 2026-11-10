@@ -4,7 +4,7 @@ export function buildResumeWord(model,api){
   const {Document,Paragraph,TextRun,Table,TableRow,TableCell,WidthType,BorderStyle}=api;
   const design=model.design||{};const font=(design.font||design.template)==='classic'?'Times New Roman':'Arial';
   const size=design.size==='small'?20:design.size==='large'?24:22;
-  const accent=(templateColors.find(color=>color.id===design.color)?.hex||'#222222').slice(1);
+  const accent=(design.color==='default'||!design.color?'#222222':templateColors.find(color=>color.id===design.color)?.hex||'#222222').slice(1);
   const space=design.spacing==='tight'?60:design.spacing==='relaxed'?180:100;
   const paragraph=(text,options={})=>new Paragraph({children:[new TextRun({text:String(text||''),font,size,...options})],spacing:{after:space},...(options.bullet?{bullet:{level:0}}:{})});
   function sections(items){return items.flatMap(section=>[
