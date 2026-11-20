@@ -1,16 +1,27 @@
+import { jobRoute } from './job-routes.mjs';
+import { accountRequest } from './accounts.mjs';
 import http from 'node:http';
 import { readFile } from 'node:fs/promises';
-import { normalizeJobs } from './jobs.mjs';
-import { directionSearch, filterDirection } from './search.mjs';
-import { getEmployerJobs } from './employer-jobs.mjs';
 
-const files = { '/resume-word.js':['resume-word.js','text/javascript'], '/resume-templates.js':['resume-templates.js','text/javascript'], '/resume-picker.js':['resume-picker.js','text/javascript'], '/resume-import.js':['resume-import.js','text/javascript'], '/resume-guidance.js':['resume-guidance.js','text/javascript'], '/resume-pdf.js':['resume-pdf.js','text/javascript'], '/resume/build': ['resume-build.html','text/html'], '/resume-build.js': ['resume-build.js','text/javascript'], '/resume/edit': ['resume-edit.html', 'text/html'], '/resume-edit.js': ['resume-edit.js', 'text/javascript'], '/support': ['support.html', 'text/html'], '/': ['index.html', 'text/html'], '/client.js': ['client.js', 'text/javascript'], '/careers.js': ['careers.js', 'text/javascript'], '/style.css': ['style.css', 'text/css'], '/resume': ['resume.html','text/html'], '/resume.js':['resume.js','text/javascript'], '/resume-model.js':['resume-model.js','text/javascript'] };
+const files = { '/resume-word.js':['resume-word.js','text/javascript'], '/resume-templates.js':['resume-templates.js','text/javascript'], '/resume-picker.js':['resume-picker.js','text/javascript'], '/resume-import.js':['resume-import.js','text/javascript'], '/resume-guidance.js':['resume-guidance.js','text/javascript'], '/resume-pdf.js':['resume-pdf.js','text/javascript'], '/resume/build': ['resume-build.html','text/html'], '/resume-build.js': ['resume-build.js','text/javascript'], '/resume/edit': ['resume-edit.html', 'text/html'], '/resume-edit.js': ['resume-edit.js', 'text/javascript'], '/support': ['support.html', 'text/html'], '/': ['index.html', 'text/html'], '/jobs': ['index.html', 'text/html'], '/client.js': ['client.js', 'text/javascript'], '/careers.js': ['careers.js', 'text/javascript'], '/style.css': ['style.css', 'text/css'], '/resume': ['resume.html','text/html'], '/resume.js':['resume.js','text/javascript'], '/resume-model.js':['resume-model.js','text/javascript'] };
 
 for(const path of ['/build-resume/start','/build-resume','/build-resume/choose-template','/build-resume/select-resume',...['cntc','expr','educ','skil','summ','addl','final'].map(section=>'/build-resume/section/'+section)])files[path]=['resume-build.html','text/html'];
 files['/resume-builder.css']=['resume-builder.css','text/css'];
 Object.assign(files, {
+  '/404': ['404.html', 'text/html'],
+  '/404.js': ['404.js', 'text/javascript'],
+  '/account-help': ['account-help.html', 'text/html'],
+  '/recovery.js': ['recovery.js', 'text/javascript'],
+  '/sign-in': ['account.html', 'text/html'],
+  '/sign-up': ['account.html', 'text/html'],
+  '/account.js': ['account.js', 'text/javascript'],
+  '/profile-storage.js': ['profile-storage.js', 'text/javascript'],
+  '/resume-storage.js': ['resume-storage.js', 'text/javascript'],
   '/budget': ['budget.html', 'text/html'],
   '/budget.js': ['budget.js', 'text/javascript'],
+  '/business-majors.js': ['business-majors.js', 'text/javascript'],
+  '/job-snippet.js': ['job-snippet.js', 'text/javascript'],
+  '/employer-logos.js': ['employer-logos.js', 'text/javascript'],
   '/applications': ['applications.html', 'text/html'],
   '/applications.js': ['applications.js', 'text/javascript']
 });
@@ -33,38 +44,32 @@ const json = (res, status, data) => {
 http.createServer(async (req, res) => {
   try {
     const url = new URL(req.url, 'http://localhost');
+    if (url.pathname.startsWith('/api/account/')) return await accountRequest(req, res, url.pathname);
     if (req.method !== 'GET') return json(res, 405, { error: 'Method not allowed.' });
     if (vendorFiles[url.pathname]) {
       const content = await readFile(new URL('./node_modules/'+vendorFiles[url.pathname],import.meta.url));
       const mime=url.pathname.endsWith('.css')?'text/css; charset=utf-8':url.pathname.endsWith('.woff2')?'font/woff2':url.pathname.endsWith('.woff')?'font/woff':url.pathname.endsWith('.ttf')?'font/ttf':url.pathname.endsWith('.svg')?'image/svg+xml':'text/javascript; charset=utf-8';
       res.writeHead(200,{'Content-Type':mime}); return res.end(content);
     }
-    if (url.pathname === '/api/employer-jobs') {
-      const query=Object.fromEntries(['direction','keywords','location'].map(key=>[key,url.searchParams.get(key)||'']));
-      if (query.direction && !directionSearch(query.direction) || Object.values(query).some(value=>value.length>120)) return json(res,400,{error:'Invalid search.'});
-      try { return json(res,200,await getEmployerJobs(query)); }
-      catch { return json(res,502,{error:'Employer feed unavailable. Adzuna results may still be available.'}); }
+    if (url.pathname.startsWith('/api/')) {
+      const handled = await jobRoute(url, process.env, (status, data) => {
+        json(res, status, data);
+        return true;
+      });
+      if (handled) return;
     }
-    if (url.pathname === '/api/jobs') {
-      const id = process.env.ADZUNA_APP_ID, key = process.env.ADZUNA_APP_KEY;
-      if (!id || !key) return json(res, 503, { error: 'Add your Adzuna app ID and key to app/.env, then restart the app.' });
-      const location = url.searchParams.get('location') || 'Fayetteville, Arkansas';
-      const keywords = url.searchParams.get('keywords') || '';
-      const direction = url.searchParams.get('direction');
-      if (direction && !directionSearch(direction)) return json(res, 400, { error: 'Choose a valid career direction.' });
-      if (location.length > 120 || keywords.length > 120) return json(res, 400, { error: 'Keep search fields under 120 characters.' });
-      const endpoint = new URL('https://api.adzuna.com/v1/api/jobs/us/search/1');
-      endpoint.search = new URLSearchParams({ app_id: id, app_key: key, where: location, what: direction ? directionSearch(direction) : keywords, results_per_page: direction ? '50' : '10', 'content-type': 'application/json' });
-      const upstream = await fetch(endpoint, { signal: AbortSignal.timeout(15000), headers: { Accept: 'application/json' } });
-      if (!upstream.ok) return json(res, 502, { error: [401, 403].includes(upstream.status) ? 'Adzuna could not authorize this search. Check your server credentials and account access.' : `Adzuna returned status ${upstream.status}. Please try again later.` });
-      const raw = await upstream.json();
-      if (!direction) return json(res, 200, normalizeJobs(raw));
-      const filtered = filterDirection(raw, direction);
-      const normalized = normalizeJobs(filtered);
-      return json(res, 200, { ...normalized, jobs: normalized.jobs.slice(0, 10), reviewed: filtered.reviewed, removed: filtered.removed, relevant: normalized.jobs.length });
+    if (/^\/logos\/[a-z0-9-]+\.png$/.test(url.pathname)) {
+      const logo = await readFile(new URL('./public' + url.pathname, import.meta.url)).catch(() => null);
+      if (!logo) return json(res, 404, { error: 'Page not found.' });
+      res.writeHead(200, { 'Content-Type': 'image/png' });
+      return res.end(logo);
     }
     const file = files[url.pathname];
-    if (!file) return json(res, 404, { error: 'Page not found.' });
+    if (!file) {
+      if (url.pathname.startsWith('/api/')) return json(res, 404, { error: 'Page not found.' });
+      res.writeHead(404, { 'Content-Type': 'text/html; charset=utf-8' });
+      return res.end(await readFile(new URL('./public/404.html', import.meta.url)));
+    }
     res.writeHead(200, { 'Content-Type': file[1] + '; charset=utf-8' });
     res.end(await readFile(new URL('./public/' + file[0], import.meta.url)));
   } catch {

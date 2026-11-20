@@ -1,22 +1,20 @@
 <!doctype html>
 <html lang="en">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Commencely — Resume</title><link rel="stylesheet" href="/style.css?v=heritage"><link rel="stylesheet" href="/vendor/phosphor.css">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Commencely — Resume</title><link rel="stylesheet" href="/style.css?v=reference-layout"><link rel="stylesheet" href="/vendor/phosphor.css">
 </head>
-<body class="app-shell">
+<body class="app-shell resume-shell">
 <header class="app-header">
+  <div class="guide-banner"><span>Northwest Arkansas Graduate Guide</span><span>Résumé studio</span><span>Build · preview · download</span></div>
   <div class="app-header-inner">
-    <a class="app-wordmark" href="/">Commencely</a>
-    <nav class="app-nav" aria-label="Main"><a href="/" data-destination="home"><i class="ph ph-house" aria-hidden="true"></i><span>Home</span></a><a href="/#jobs" data-destination="jobs"><i class="ph ph-magnifying-glass" aria-hidden="true"></i><span>Jobs</span></a><a href="/applications" data-destination="saved"><i class="ph ph-bookmark-simple" aria-hidden="true"></i><span>Saved</span></a><a href="/budget" data-destination="budget"><i class="ph ph-calculator" aria-hidden="true"></i><span>Budget</span></a></nav>
-    <details class="app-menu">
-      <summary aria-label="More tools"><i class="ph ph-list" aria-hidden="true"></i></summary>
-      <nav aria-label="More tools"><a href="/resume">Résumé builder</a><a href="/support">Local support</a></nav>
-    </details>
+    <a class="app-wordmark" href="/">Commencely</a><span class="guide-edition">Career &amp; Launch Guide</span>
+    <nav class="app-nav" aria-label="Main"><a href="/" data-destination="home"><i class="ph ph-house" aria-hidden="true"></i> <span>Home</span></a><a href="/jobs" data-destination="jobs"><i class="ph ph-magnifying-glass" aria-hidden="true"></i> <span>Jobs</span></a><a href="/applications" data-destination="saved"><i class="ph ph-bookmark-simple" aria-hidden="true"></i> <span>Saved</span></a><a href="/budget" data-destination="budget"><i class="ph ph-calculator" aria-hidden="true"></i> <span>Budget</span></a><a href="/resume" data-destination="resume" aria-current="page"><i class="ph ph-file-text" aria-hidden="true"></i> <span>Résumé</span></a><a href="/support" data-destination="support"><i class="ph ph-handshake" aria-hidden="true"></i> <span>Local Support</span></a></nav>
+    <a class="guide-account" href="/sign-in" data-account-link>Sign in</a>
   </div>
 </header>
 <main class="app-main">
-<div class="resume-tools">
-<h1>My resume</h1>
-<p>Add your resume to keep it ready for your job search.</p>
+<div class="page-heading"><p class="breadcrumbs"><a href="/">Commencely</a> / Résumé studio</p><p class="editorial-eyebrow">Professional document studio</p><h1>Northwest Arkansas Résumé Studio</h1><div class="heading-row"><p class="page-intro">Create a résumé from a template or add your existing document to keep it ready for your job search.</p></div></div><div class="resume-layout"><div class="resume-tools studio-panel">
+<div class="studio-controls"><a href="/resume/build">Build a résumé</a><a href="#choose-resume">Import a résumé</a></div>
+<section class="studio-guide"><h2><i class="ph ph-file-text" aria-hidden="true"></i> Résumé builder</h2><p>Choose a template, enter your education and experience, and review a live preview before downloading.</p><a class="app-action" href="/resume/build">Open résumé builder</a></section>
 <h2>Add your resume</h2>
 <p id="resume-file-help">PDF, Word (.docx), or text (.txt) · Up to 5 MB</p>
 <input type="file" id="resume-file" accept=".pdf,.docx,.txt" hidden>
@@ -65,5 +63,7 @@
 <h2>Editable copy preview</h2>
 </div>
 </div>
-<article id="resume-preview" class="resume-document" aria-label="Resume preview"></article>
-</main><script type="module" src="/resume.js"></script></body></html>
+<div class="studio-paper"><p class="editorial-eyebrow">Sample résumé preview</p><article id="resume-preview" class="resume-document" aria-label="Resume preview"></article><div class="studio-example">
+  <div id="studio-sample" class="resume-document" aria-label="Sample résumé for Jordan Morgan"></div>
+</div></div></div>
+</main><footer class="site-footer"><div class="editorial-wrap"><span><strong>Commencely</strong> · A career guide for Northwest Arkansas graduates</span><span>Fayetteville · Bentonville · Rogers · Springdale</span></div></footer><script type="module" src="/resume.js?v=upload-size-alert"></script></body></html>

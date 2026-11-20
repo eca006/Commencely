@@ -1,4 +1,8 @@
+import { originalStorage } from './resume-storage.js';
+import { id, profileStorage } from './profile-storage.js';
 import { blankTemplate, resumeText, resumeHTML, hasResumeContent, validateResumeFile, resumeMarkup, resumeStyles } from './resume-model.js';
+import { templateSample, templateDesign } from './resume-templates.js';
+document.querySelector('#studio-sample').innerHTML = resumeMarkup({ ...templateSample, design: templateDesign() });
 const previewStyle=document.createElement('style');previewStyle.textContent=resumeStyles;document.head.append(previewStyle);
 const form=document.querySelector('#resume-form');
 const status=document.querySelector('#resume-status');
@@ -13,19 +17,6 @@ let originalURL=null;
 let originalRevision=0;
 let pdfPreviewVersion=0;
 let editingCopy=true;
-async function originalStorage(action,value){
-  const db=await new Promise((resolve,reject)=>{
-    const request=indexedDB.open('commencely-original-resume',1);
-    request.onupgradeneeded=()=>request.result.createObjectStore('files');
-    request.onsuccess=()=>resolve(request.result);request.onerror=()=>reject(request.error);
-  });
-  try{return await new Promise((resolve,reject)=>{
-    const transaction=db.transaction('files',action==='get'?'readonly':'readwrite');
-    const store=transaction.objectStore('files');
-    const request=action==='get'?store.get('original'):action==='put'?store.put(value,'original'):store.delete('original');
-    transaction.oncomplete=()=>resolve(request.result);transaction.onerror=()=>reject(transaction.error);transaction.onabort=()=>reject(transaction.error);
-  });}finally{db.close();}
-}
 function showEditable(show){
   show=false;
   editingCopy=show;
@@ -112,7 +103,7 @@ function render(){
 }
 form.addEventListener('input',()=>{render();importStatus.textContent='Changes are not saved yet. Choose Save resume on this browser to keep them.';status.textContent='Unsaved changes. Download your resume or save the draft on this browser.';});
 try {
-  const saved=JSON.parse(localStorage.getItem(key));
+  const saved=JSON.parse(profileStorage.getItem(key));
   if(saved && ['name','contact','body'].every(field=>typeof saved[field]==='string') && hasResumeContent(saved)){
     for(const field of ['name','contact','body']) form.elements[field].value=saved[field];
     savedDraftText=JSON.stringify(model());
@@ -128,18 +119,18 @@ function saveDraft(){
   if(!hasResumeContent(model())){importStatus.textContent='Import a resume or enter your details before saving. Your saved copy has not been replaced.';return;}
   try{
     const serialized=JSON.stringify(model());
-    localStorage.setItem(key,serialized);
-    if(localStorage.getItem(key)!==serialized)throw new Error('Save could not be verified.');
+    profileStorage.setItem(key,serialized);
+    if(profileStorage.getItem(key)!==serialized)throw new Error('Save could not be verified.');
     savedDraftText=serialized;
-    status.textContent='Resume saved on this browser. Use Download below to save a file to your computer.';
-    importStatus.textContent='Resume saved ✓ You can leave and return in this same browser. To save a file to your computer, use Download below.';
+    status.textContent=id?'Resume saved on this browser. Use Download below to save a file to your computer.':'Draft kept in this browser tab, including refreshes. Download a copy before closing the tab.';
+    importStatus.textContent=id?'Resume saved ✓ You can leave and return in this same browser. To save a file to your computer, use Download below.':status.textContent;
     render();
   }catch{status.textContent='Could not save this draft. Download it to keep a copy.';importStatus.textContent=status.textContent;}
 }
 for(const id of ['save-resume','save-imported-resume'])document.getElementById(id).addEventListener('click',saveDraft);
 document.querySelector('#clear-resume').addEventListener('click',async()=>{
   if(!confirm('Clear the original uploaded file, current text draft, and their saved browser copies? Download it first if you want to keep it.'))return;
-  try{localStorage.removeItem(key);status.textContent='Draft and saved browser copy cleared.';}catch{status.textContent='Draft cleared from the page, but browser storage could not be cleared. Remove site data in browser settings.';}
+  try{profileStorage.removeItem(key);status.textContent='Draft and saved browser copy cleared.';}catch{status.textContent='Draft cleared from the page, but browser storage could not be cleared. Remove site data in browser settings.';}
   originalRevision++;
   try{await originalStorage('delete');}catch{status.textContent='Text draft cleared, but the original file could not be removed from browser storage. Remove site data in browser settings to clear it.';}
   originalFile=null;if(originalURL)URL.revokeObjectURL(originalURL);originalURL=null;
@@ -150,6 +141,13 @@ document.querySelector('#clear-resume').addEventListener('click',async()=>{
 document.querySelector('#remove-original').addEventListener('click',()=>document.querySelector('#clear-resume').click());
 fileInput.addEventListener('change',async()=>{
   const file=fileInput.files[0];if(!file)return;
+  if (file.size > 5 * 1024 * 1024) {
+    const message = 'Your resume file is too large. Choose a file up to 5 MB.';
+    importStatus.textContent = message;
+    alert(message);
+    fileInput.value = '';
+    return;
+  }
   if(originalFile&&!confirm('Replace your current resume with this file?')){fileInput.value='';return;}
   fileInput.disabled=true;document.querySelector('#choose-resume').disabled=true;
   try{
@@ -157,7 +155,7 @@ fileInput.addEventListener('change',async()=>{
     originalRevision++;
     const original={name:file.name,blob:file.slice(0,file.size,file.type)};
     showOriginal(original,'Adding your resume…');
-    try{await originalStorage('put',original);document.querySelector('#original-status').textContent='Resume added. Saved on this browser.';}
+    try{await originalStorage('put',original);document.querySelector('#original-status').textContent=id?'Resume added. Saved on this browser.':'Resume kept in this browser tab. Download a copy before closing the tab.';}
     catch{document.querySelector('#original-status').textContent='Resume added for this visit. It could not be saved for next time.';}
   }catch(error){
     const message=error.message||'Could not add this file. Please try again.';

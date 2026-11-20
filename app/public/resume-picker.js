@@ -1,9 +1,10 @@
+import { profileStorage } from './profile-storage.js';
 import {resumeTemplates,templateColors,careerFields,filterTemplates,templateDesign,templateSample} from './resume-templates.js';
 import {resumeMarkup,resumeDesignClasses} from './resume-model.js';
 export function initResumePicker({filters={},getDesign,setDesign,onChoose,onStage}){
   const state={hasPhoto:'',hasGraphics:'',columns:'',fields:[],...filters};
   let filtered=[],previewIndex=0,recommendationStep=-1;
-  let pickCounts={};try{pickCounts=JSON.parse(localStorage.getItem('commencely-template-picks-v1'))||{};}catch{}
+  let pickCounts={};try{pickCounts=JSON.parse(profileStorage.getItem('commencely-template-picks-v1'))||{};}catch{}
   const previewDialog=document.querySelector('#template-dialog');
   const recommendations=document.querySelector('#recommendation-dialog');
   const palette=()=>getDesign().color||'default';
@@ -25,20 +26,21 @@ export function initResumePicker({filters={},getDesign,setDesign,onChoose,onStag
     if(!filtered.length){const text=document.createElement('p');text.textContent='No templates match these filters. Remove a filter or clear all to see more layouts.';grid.append(text);}
     filtered.forEach((template,index)=>{
       const card=document.createElement('div');card.className='template-card';
-      const paper=document.createElement('div');paper.className='template-thumbnail resume-document '+resumeDesignClasses(templateDesign(template.id,palette()));paper.innerHTML=resumeMarkup({...templateSample,design:templateDesign(template.id,palette())});paper.setAttribute('aria-hidden','true');
+      const paper=document.createElement('div');paper.className='template-thumbnail resume-document '+resumeDesignClasses(templateDesign(template.id,palette()));paper.innerHTML=resumeMarkup({...templateSample,photoSlot:'preview',design:templateDesign(template.id,palette())});paper.setAttribute('aria-hidden','true');
       const preview=document.createElement('button');preview.type='button';preview.className='template-preview-button';preview.innerHTML='<i class="ph ph-magnifying-glass-plus" aria-hidden="true"></i>';preview.setAttribute('aria-label','Preview '+template.name);preview.addEventListener('click',()=>{previewIndex=index;renderPreview();previewDialog.showModal();});
-      const choose=document.createElement('button');choose.type='button';choose.className='choose-template-button';choose.textContent='Choose template';choose.setAttribute('aria-label','Choose '+template.name+' template');choose.addEventListener('click',()=>chooseTemplate(template));card.append(paper,preview,choose);grid.append(card);
+      const name=document.createElement('h2');name.className='template-card-name';name.textContent=template.name;
+      const choose=document.createElement('button');choose.type='button';choose.className='choose-template-button';choose.textContent='Choose template';choose.setAttribute('aria-label','Choose '+template.name+' template');choose.addEventListener('click',()=>chooseTemplate(template));card.append(paper,preview,name,choose);grid.append(card);
     });
     onStage(null,{...state,fields:[...state.fields]});
   }
   function clearFilters(){Object.assign(state,{hasPhoto:'',hasGraphics:'',columns:'',fields:[]});render();}
-  function chooseTemplate(template){pickCounts[template.id]=(Number(pickCounts[template.id])||0)+1;try{localStorage.setItem('commencely-template-picks-v1',JSON.stringify(pickCounts));}catch{}setDesign(templateDesign(template.id,palette(),getDesign()));if(previewDialog.open)previewDialog.close();onChoose();}
+  function chooseTemplate(template){pickCounts[template.id]=(Number(pickCounts[template.id])||0)+1;try{profileStorage.setItem('commencely-template-picks-v1',JSON.stringify(pickCounts));}catch{}setDesign(templateDesign(template.id,palette(),getDesign()));if(previewDialog.open)previewDialog.close();onChoose();}
   function renderPreview(){
     if(!filtered.length)return;previewIndex=(previewIndex+filtered.length)%filtered.length;
     const template=filtered[previewIndex];const design=templateDesign(template.id,palette());
     document.querySelector('#template-position').textContent=(previewIndex+1)+' of '+filtered.length;
     document.querySelector('#template-dialog-title').textContent=template.name;document.querySelector('#template-local-picks').textContent=pickCounts[template.id]?'Chosen '+pickCounts[template.id]+' time'+(pickCounts[template.id]===1?'':'s')+' in this browser':'Not yet chosen in this browser';document.querySelector('#template-tags').textContent=template.tags.join(' · ');
-    const paper=document.querySelector('#template-large');paper.className='resume-document '+resumeDesignClasses(design);paper.innerHTML=resumeMarkup({...templateSample,design});
+    const paper=document.querySelector('#template-large');paper.className='resume-document '+resumeDesignClasses(design);paper.innerHTML=resumeMarkup({...templateSample,photoSlot:'preview',design});
     const details=document.querySelector('#template-details');details.replaceChildren();
     for(const text of [template.columns+' column'+(template.columns===2?'s':''),'Editable text and section order','Selectable text in PDF exports','PDF, Word, HTML, and TXT downloads',template.hasPhoto?'Optional photo area; add your own photo':'No photo']){const item=document.createElement('li');item.textContent=text;details.append(item);}colors(document.querySelector('#modal-colors'));
   }

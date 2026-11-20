@@ -4,24 +4,31 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Commencely — Saved jobs</title>
-  <link rel="stylesheet" href="/style.css?v=heritage">
+  <link rel="stylesheet" href="/style.css?v=brand-budget">
 <link rel="stylesheet" href="/vendor/phosphor.css">
 </head>
-<body class="app-shell">
+<body class="app-shell saved-shell">
 <header class="app-header">
+  <div class="guide-banner"><span>Northwest Arkansas Graduate Guide</span><span>Application tracker & saved jobs</span><span>Progress saved in this browser</span></div>
   <div class="app-header-inner">
-    <a class="app-wordmark" href="/">Commencely</a>
-    <nav class="app-nav" aria-label="Main"><a href="/" data-destination="home"><i class="ph ph-house" aria-hidden="true"></i><span>Home</span></a><a href="/#jobs" data-destination="jobs"><i class="ph ph-magnifying-glass" aria-hidden="true"></i><span>Jobs</span></a><a href="/applications" data-destination="saved" aria-current="page"><i class="ph ph-bookmark-simple" aria-hidden="true"></i><span>Saved</span></a><a href="/budget" data-destination="budget"><i class="ph ph-calculator" aria-hidden="true"></i><span>Budget</span></a></nav>
-    <details class="app-menu">
-      <summary aria-label="More tools"><i class="ph ph-list" aria-hidden="true"></i></summary>
-      <nav aria-label="More tools"><a href="/resume">Résumé builder</a><a href="/support">Local support</a></nav>
-    </details>
+    <a class="app-wordmark" href="/">Commencely</a><span class="guide-edition">Career &amp; Launch Guide</span>
+    <nav class="app-nav" aria-label="Main"><a href="/" data-destination="home"><i class="ph ph-house" aria-hidden="true"></i> <span>Home</span></a><a href="/jobs" data-destination="jobs"><i class="ph ph-magnifying-glass" aria-hidden="true"></i> <span>Jobs</span></a><a href="/applications" data-destination="saved" aria-current="page"><i class="ph ph-bookmark-simple" aria-hidden="true"></i> <span>Saved</span></a><a href="/budget" data-destination="budget"><i class="ph ph-calculator" aria-hidden="true"></i> <span>Budget</span></a><a href="/resume" data-destination="resume"><i class="ph ph-file-text" aria-hidden="true"></i> <span>Résumé</span></a><a href="/support" data-destination="support"><i class="ph ph-handshake" aria-hidden="true"></i> <span>Local Support</span></a></nav>
+    <a class="guide-account" href="/sign-in" data-account-link>Sign in</a>
   </div>
 </header>
 <main class="app-main">
-<h1>Saved jobs</h1>
-<p>Save jobs from the search results, then update each application as you go. Your list is saved in this browser.</p>
+<div class="page-heading"><p class="breadcrumbs"><a href="/">Commencely</a> / Saved applications</p><p class="editorial-eyebrow">Career launchpad</p><h1>Saved Jobs &amp; Applications</h1><div class="heading-row"><p class="page-intro">Save roles from the job search and track your applications through each interview round.</p><dl id="tracker-counts" class="heading-stats"></dl></div></div>
+<div class="tracker-toolbar" hidden><div id="tracker-filters" role="group" aria-label="Filter applications"></div><a class="guide-button" href="/jobs">Browse more jobs</a><button type="button" id="export-tracker">Export CSV</button></div>
+<div class="guide-columns"><div>
 <p id="application-status" role="status"></p>
-<section id="saved-jobs" aria-label="Saved job listings"></section>
-</main><script type="module" src="/applications.js"></script></body>
+<section id="guest-tracker" class="guide-panel">
+<h2>Sign in to save jobs</h2>
+<p>Use an account to save jobs and track your applications.</p>
+<div class="guest-account-actions">
+<a class="app-action" href="/sign-in">Sign in</a>
+<a class="app-action guest-create-account" href="/sign-up">Create an account</a>
+</div>
+</section>
+<section hidden id="saved-jobs" aria-label="Saved job listings"></section>
+</div><aside class="guide-rail"><section class="guide-panel"><h2><i class="ph ph-check-square" aria-hidden="true"></i> Interview readiness</h2><p>Prepare your résumé, find interview attire, and plan your trip.</p><a class="app-action" href="/support">Open attire &amp; support guide</a></section><section class="guide-panel"><h2><i class="ph ph-scales" aria-hidden="true"></i> Offer pay comparison</h2><p>Compare pay against rent and other living costs before accepting an offer.</p><a class="app-action" href="/budget">Open monthly budget</a></section><section class="guide-panel"><h2><i class="ph ph-lock" aria-hidden="true"></i> Private to this browser</h2><p>Your saved roles and application stages stay in this browser.</p></section></aside></div></main><footer class="site-footer"><div class="editorial-wrap"><span><strong>Commencely</strong> · A career guide for Northwest Arkansas graduates</span><span>Fayetteville · Bentonville · Rogers · Springdale</span></div></footer><script type="module" src="/applications.js?v=guest-access"></script></body>
 </html>

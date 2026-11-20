@@ -58,7 +58,24 @@ export const resumeStyles = `
 .resume-document.with-rules h2{border-bottom:1px solid var(--resume-accent);padding-bottom:4px}
 .resume-document .resume-columns{display:grid;grid-template-columns:minmax(0,32%) minmax(0,1fr);gap:24px}
 .resume-document .resume-side,.resume-document .resume-main{min-width:0}
+.resume-document.sidebar-right .resume-columns{grid-template-columns:minmax(0,1fr) minmax(0,32%)}
+.resume-document.sidebar-right .resume-side{border-left:1px solid var(--resume-accent);padding-left:12px}
+.resume-document.header-treatment-band .resume-header{background:var(--resume-accent);border:0;padding:15px 13px}
+.resume-document.header-treatment-band .resume-header :is(h1,.resume-contact){color:white}
+.resume-document.header-treatment-frame .resume-header{border:1px solid var(--resume-accent);padding:12px}
+.resume-document.header-treatment-double-rule .resume-header{border-bottom:5px double var(--resume-accent)}
+.resume-document.header-treatment-minimal .resume-header{border:0;padding-bottom:0}
+.resume-document.header-treatment-accent .resume-header{border:0;border-left:5px solid var(--resume-accent);padding:5px 0 5px 12px}
+.resume-document.header-treatment-top-rule .resume-header{border:0;border-top:5px solid var(--resume-accent);padding:12px 0 4px}
+.resume-document.header-treatment-split .resume-header{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+.resume-document.header-treatment-split .resume-header:after{display:none}
+.resume-document.header-treatment-split .resume-contact{flex:0 1 45%;text-align:right}
+@media(max-width:460px){.resume-document.header-treatment-split .resume-header{display:block}.resume-document.header-treatment-split .resume-contact{text-align:left}}
+
 .resume-document .resume-photo{width:65px;height:65px;object-fit:cover;float:right;margin:0 0 10px 15px}
+.resume-document .resume-photo-slot{box-sizing:border-box;display:grid;place-items:center;background:#f3f4f6;color:#333;border:1px dashed #66717c;border-radius:4px;font:600 11px/1.2 system-ui,sans-serif;text-align:center;padding:4px}
+.resume-document button.resume-photo-slot{cursor:pointer}
+.resume-document button.resume-photo-slot:focus-visible{outline:2px solid #243e67;outline-offset:2px}
 .resume-document .resume-header:after{content:"";display:block;clear:both}
 .resume-document.margins-narrow{padding:25px}.resume-document.margins-wide{padding:55px}
 @media(max-width:600px){.resume-document{padding:24px 20px;font-size:14px}.resume-document h1{font-size:24px}}
@@ -66,8 +83,8 @@ export const resumeStyles = `
 `;
 const sectionHeading = text => /^(profile|summary|professional summary|objective|education|experience|work experience|professional experience|employment|employment history|projects|selected projects|selected AI and business technology projects|skills|technical skills|technical and analytical skills|certifications|certificates|awards|volunteer experience|volunteering|activities|leadership|references)$/i.test(text.trim());
 const bullet = text => /^[•●▪‣*–-]\s+/.test(text);
-export function resumeMarkup({name='',contact='',body='',sections,design={},photo=''}={}){
-  if(Array.isArray(sections))return guidedMarkup({name,contact,sections,design,photo});
+export function resumeMarkup({name='',contact='',body='',sections,design={},photo='',photoSlot=''}={}){
+  if(Array.isArray(sections))return guidedMarkup({name,contact,sections,design,photo,photoSlot});
   const lines=body.replace(/\r\n?/g,'\n').split('\n');
   let cursor=0;
   const output=[];
@@ -123,17 +140,26 @@ export function buildGuidedResume(answers={}){
 }
 
 export function safeResumePhoto(value){return typeof value==='string'&&value.length<420000&&/^data:image\/(?:png|jpeg);base64,[A-Za-z0-9+/=]+$/.test(value)?value:'';}
-function guidedMarkup({name,contact,sections,design={},photo=''}){
+function guidedMarkup({name,contact,sections,design={},photo='',photoSlot=''}){
   if(design.columns===2){
     const sideKeys=['skills','languages','certifications','awards','activities','references'];
-    const header=guidedMarkup({name,contact,sections:[],design:{...design,columns:1},photo});
+    const header=guidedMarkup({name,contact,sections:[],design:{...design,columns:1},photo,photoSlot});
     const side=sections.filter(section=>sideKeys.includes(section.key));const main=sections.filter(section=>!sideKeys.includes(section.key));
-    return header+'<div class="resume-columns"><div class="resume-side">'+guidedMarkup({name:'',contact:'',sections:side})+'</div><div class="resume-main">'+guidedMarkup({name:'',contact:'',sections:main})+'</div></div>';
+    const sidebar = '<div class="resume-side">' + guidedMarkup({ name: '', contact: '', sections: side }) + '</div>';
+    const primary = '<div class="resume-main">' + guidedMarkup({ name: '', contact: '', sections: main }) + '</div>';
+    const columns = design.sidebar === 'right' ? primary + sidebar : sidebar + primary;
+    return header + '<div class="resume-columns">' + columns + '</div>';
   }
 
   const output=[];
   const node=(tag,text,path,className='')=>'<'+tag+' data-resume-path="'+path+'"'+(className?' class="'+className+'"':'')+'>'+escape(text)+'</'+tag+'>';
-  if(name||contact)output.push('<header class="resume-header">'+(design.hasPhoto&&safeResumePhoto(photo)?'<img class="resume-photo" alt="Resume photo" src="'+escape(photo)+'">':'')+(name?node('h1',name,'name'):'')+(contact?node('p',contact,'contact','resume-contact'):'')+'</header>');
+  let picture = '';
+  if (design.hasPhoto) {
+    if (safeResumePhoto(photo)) picture = '<img class="resume-photo" alt="Resume photo" src="' + escape(photo) + '">';
+    else if (photoSlot === 'upload') picture = '<button type="button" class="resume-photo resume-photo-slot">Add photo</button>';
+    else if (photoSlot === 'preview') picture = '<span class="resume-photo resume-photo-slot">Photo</span>';
+  }
+  if(name||contact||picture)output.push('<header class="resume-header">'+picture+(name?node('h1',name,'name'):'')+(contact?node('p',contact,'contact','resume-contact'):'')+'</header>');
   sections.forEach((section,sectionIndex)=>{
     const sectionPath='sections.'+(section.key??sectionIndex);
     output.push('<section class="resume-section">'+node('h2',section.title,sectionPath+'.title'));
@@ -238,7 +264,9 @@ export function applyResumeEdits(model,edits={}){
 
 export const resumeSectionNames={profile:'Profile',education:'Education',experience:'Experience',projects:'Projects',skills:'Skills',certifications:'Certifications',languages:'Languages',awards:'Awards & honors',activities:'Activities',references:'References',importedText:'Imported details',customText:'Custom section'};
 export function resumeDesignClasses(design={}){
-  return ['template-'+(['classic','modern'].includes(design.font)?design.font:['classic','modern','compact'].includes(design.template)?design.template:'classic'),'size-'+(['small','standard','large'].includes(design.size)?design.size:'standard'),'spacing-'+(['tight','normal','relaxed'].includes(design.spacing)?design.spacing:'normal'),'color-'+(templateColors.some(color=>color.id===design.color)?design.color:'default'),design.graphics?'with-rules':'no-rules','margins-'+(['standard','narrow','wide'].includes(design.margins)?design.margins:'standard'),'header-'+(['left','center'].includes(design.headerAlign)?design.headerAlign:'center'),'sections-'+(['plain','ruled','label'].includes(design.sectionStyle)?design.sectionStyle:'plain'),'entries-'+(design.entryStyle==='lined'?'lined':'standard')].join(' ');
+  const headerStyle = ['band','frame','double-rule','minimal','accent','top-rule','split'].includes(design.headerStyle)
+    ? design.headerStyle : 'standard';
+  return ['template-'+(['classic','modern'].includes(design.font)?design.font:['classic','modern','compact'].includes(design.template)?design.template:'classic'),'size-'+(['small','standard','large'].includes(design.size)?design.size:'standard'),'spacing-'+(['tight','normal','relaxed'].includes(design.spacing)?design.spacing:'normal'),'color-'+(templateColors.some(color=>color.id===design.color)?design.color:'default'),design.graphics?'with-rules':'no-rules','margins-'+(['standard','narrow','wide'].includes(design.margins)?design.margins:'standard'),'header-'+(['left','center'].includes(design.headerAlign)?design.headerAlign:'center'),'sections-'+(['plain','ruled','label'].includes(design.sectionStyle)?design.sectionStyle:'plain'),'entries-'+(design.entryStyle==='lined'?'lined':'standard')].concat(headerStyle==='standard'?[]:['header-treatment-'+headerStyle],design.sidebar==='right'?['sidebar-right']:[]).join(' ');
 }
 export function arrangeResume(model,layout={},design={}){
   const result=JSON.parse(JSON.stringify(model));

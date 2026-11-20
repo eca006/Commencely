@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Account | Commencely</title>
+<link rel="stylesheet" href="/style.css?v=account-footer">
+</head>
+<body class="app-shell account-page">
+<header class="account-header">
+<a class="account-wordmark" href="/">Commencely</a>
+<a href="/">Back to home <span aria-hidden="true">↗</span></a>
+</header>
+<main class="account-layout">
+<section class="account-panel" aria-labelledby="account-title">
+<h1 id="account-title">Account</h1>
+<form id="account-form" method="post" novalidate>
+<div id="account-fields">
+<p><label for="login">Email or phone number</label><input id="login" name="login" autocomplete="username" autocapitalize="none" maxlength="254" required></p>
+<p><label for="password">Password</label><input id="password" name="password" type="password" minlength="8" maxlength="128" required></p>
+<p id="confirmation-field" hidden><label for="confirmation">Confirm password</label><input id="confirmation" name="confirmation" type="password" autocomplete="new-password" maxlength="128" disabled></p>
+</div>
+<div id="account-verification" hidden>
+<p id="authenticator-setup" hidden>In your authenticator app, add a time-based account named Commencely and enter this setup key manually. <strong><code id="authenticator-key"></code></strong></p>
+<p><label for="account-code">Authenticator or recovery code</label><input id="account-code" name="code" autocomplete="one-time-code" autocapitalize="none" spellcheck="false" maxlength="24" disabled></p>
+<p><a href="" id="account-restart">Start over</a></p>
+</div>
+<button class="app-action" type="submit" disabled>Continue</button>
+</form>
+<section id="account-recovery" hidden>
+<h2>Save your recovery codes</h2>
+<p>Keep these codes somewhere safe. Each can replace your authenticator code once if you lose access to your app.</p>
+<ul id="recovery-code-list"></ul>
+<a href="/">I saved my codes. Continue to Commencely.</a>
+</section>
+<p id="account-status" role="status">Loading account form…</p>
+<p><a id="account-alternate" href="/sign-up">Create an account</a></p>
+<p><a href="/account-help">Forgot password or lost authenticator access?</a></p>
+<p class="account-slogan">You did the studying. We'll do the searching.</p>
+</section>
+</main>
+<script type="module" src="/account.js?v=two-factor"></script>
+</body>
+</html>

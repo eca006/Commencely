@@ -1,3 +1,4 @@
+import { id, profileStorage } from './profile-storage.js';
 const storageKey = 'commencely-budget-v1';
 const form = document.querySelector('#budget-form');
 const results = document.querySelector('#budget-results');
@@ -23,10 +24,49 @@ const householdCosts = {
 const annualChildcare = [0, 11457, 22289, 29277];
 const currency = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' });
 
-function balanceText(amount, suffix = '') {
-  return amount < 0
-    ? `Monthly shortfall${suffix}: ${currency.format(-amount)}`
-    : `Money remaining${suffix}: ${currency.format(amount)}`;
+const presets = [...document.querySelectorAll('#household-presets button')];
+const rentPresets = Array.from(benchmark.options).slice(1, 5).map(option => {
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.textContent = option.textContent;
+  button.value = option.value;
+  button.addEventListener('click', () => {
+    benchmark.value = button.value;
+    benchmark.dispatchEvent(new Event('change'));
+  });
+  return button;
+});
+document.querySelector('#rent-presets').append(...rentPresets);
+document.querySelector('#reset-summary').addEventListener('click', () => document.querySelector('#restore-budget').click());
+
+function showAllocation(takeHome, housing, living, savings, cushion) {
+  const allocation = document.querySelector('#budget-allocation');
+  allocation.hidden = takeHome <= 0 || cushion < 0;
+  if (allocation.hidden) return;
+  const items = allocation.querySelectorAll('li');
+  const bars = allocation.querySelectorAll('.budget-bars span');
+  [housing, living, savings, cushion].forEach((amount, index) => {
+    const percent = (amount / takeHome * 100).toFixed(1);
+    bars[index].style.width = percent + '%';
+    items[index].textContent = ['Rent', 'Living', 'Savings', 'Cushion'][index] + ' (' + percent + '%)';
+  });
+}
+for (const button of presets) {
+  button.addEventListener('click', () => {
+    household.value = button.dataset.value;
+    household.dispatchEvent(new Event('change'));
+  });
+}
+document.querySelector('#print-budget').addEventListener('click', () => window.print());
+
+function showAmount(id, label, amount) {
+  const value = document.createElement('strong');
+  value.textContent = currency.format(amount);
+  document.getElementById(id).replaceChildren(label, value);
+}
+
+function monthlyOfferBalance(amount) {
+  return currency.format(Math.abs(amount)) + (amount < 0 ? ' monthly shortfall' : ' monthly cushion');
 }
 
 function showBudget(values) {
@@ -42,25 +82,25 @@ function showBudget(values) {
   const selectedExpenses = optionalExpenses.filter(name => values[`${name}Included`] === 'on');
   const expenses = [...expenseNames, ...selectedExpenses].reduce((total, name) => total + Number(values[name] ?? 0), 0);
   const savings = Number(values.savings ?? 0);
-  const remaining = Math.round((takeHome - expenses) * 100) / 100;
+  const cushion = Math.round((takeHome - expenses - savings) * 100) / 100;
+  const balance = document.querySelector('#remaining');
+  balance.textContent = `${cushion > 0 ? '+' : ''}${currency.format(cushion)}`;
+  balance.parentElement.dataset.negative = String(cushion < 0);
+  document.querySelector('#gross-net').textContent = currency.format(firstTakeHome) + ' / month';
+  document.querySelector('#cash-flow').textContent = cushion < 0 ? 'Monthly shortfall' : cushion > 0 ? 'Positive monthly cash flow' : 'Balanced monthly cash flow';
+  showAllocation(takeHome, housing, expenses - housing, savings, cushion);
+  showAmount('take-home', usingActualPay ? 'Actual take-home pay' : 'Estimated take-home pay', takeHome);
+  showAmount('expense-housing', 'Rent & utilities', -housing);
+  showAmount('expense-living', 'Living & commute', -(expenses - housing));
+  showAmount('after-savings', 'Savings target', -savings);
+  document.querySelector('#after-savings').hidden = savings === 0;
+  showAmount('expenses', 'Total monthly outflow', expenses + savings);
 
-  document.querySelector('#take-home').textContent =
-    `${usingActualPay ? 'Monthly take-home pay (from your paychecks)' : 'Estimated take-home pay'}: ${currency.format(takeHome)}`;
-  document.querySelector('#expenses').textContent = `Total expenses: ${currency.format(expenses)}`;
-  document.querySelector('#remaining').textContent = balanceText(remaining);
-  const afterSavings = document.querySelector('#after-savings');
-  afterSavings.hidden = savings === 0;
-  afterSavings.textContent = balanceText(Math.round((takeHome - expenses - savings) * 100) / 100, ' after savings');
-
-  const comparison = document.querySelector('#offer-comparison');
-  comparison.hidden = !values.secondOffer;
-  if (!comparison.hidden) {
-    const secondTakeHome = Number(values.secondOffer) / 12 * netShare;
-    document.querySelector('#first-take-home').textContent = currency.format(firstTakeHome);
-    document.querySelector('#second-take-home').textContent = currency.format(secondTakeHome);
-    document.querySelector('#first-left').textContent = currency.format(firstTakeHome - expenses - savings);
-    document.querySelector('#second-left').textContent = currency.format(secondTakeHome - expenses - savings);
-  }
+  document.querySelector('#first-gross').textContent = currency.format(Number(values.income)) + ' / year';
+  document.querySelector('#first-left').textContent = monthlyOfferBalance(firstTakeHome - expenses - savings);
+  document.querySelector('#second-left').textContent = values.secondOffer === ''
+    ? 'Enter an annual salary to compare.'
+    : monthlyOfferBalance(Number(values.secondOffer) / 12 * netShare - expenses - savings);
 
   const warning = document.querySelector('#rent-warning');
   warning.textContent = housing > gross * 0.3
@@ -69,11 +109,25 @@ function showBudget(values) {
   results.hidden = false;
 }
 
+const deductionsSlider = document.querySelector('#deductions-slider');
+deductionsSlider.addEventListener('input', () => {
+  form.elements.deductions.value = deductionsSlider.value;
+});
+document.querySelector('#offer-comparison').addEventListener('invalid', event => {
+  event.currentTarget.open = true;
+}, true);
+
 function updateEstimate() {
-  if (form.matches(':valid')) {
+  if (form.elements.deductions.value !== '') deductionsSlider.value = form.elements.deductions.value;
+  for (const button of presets) button.setAttribute('aria-pressed', String(button.dataset.value === household.value));
+  for (const button of rentPresets) button.setAttribute('aria-pressed', String(button.value === benchmark.value));
+  const valid = form.matches(':valid');
+  document.querySelector('#restore-budget').hidden = valid;
+  if (valid) {
     showBudget(Object.fromEntries(new FormData(form)));
   } else {
     results.hidden = true;
+    for (const id of ['gross-net', 'first-gross', 'first-left', 'second-left']) document.getElementById(id).textContent = '';
   }
 }
 
@@ -158,8 +212,8 @@ form.addEventListener('submit', event => {
     for (const field of advancedFields.querySelectorAll('input, select')) {
       saved[field.name] = field.type === 'checkbox' ? field.checked : field.value;
     }
-    localStorage.setItem(storageKey, JSON.stringify(saved));
-    status.textContent = 'Budget saved.';
+    profileStorage.setItem(storageKey, JSON.stringify(saved));
+    status.textContent = id ? 'Budget saved.' : 'Budget kept in this browser tab, including refreshes. Download a copy before closing the tab.';
   } catch {
     status.textContent = 'Budget calculated. This browser could not save it.';
   }
@@ -167,10 +221,10 @@ form.addEventListener('submit', event => {
 
 fillHouseholdCosts();
 try {
-  const saved = JSON.parse(localStorage.getItem(storageKey));
+  const saved = JSON.parse(profileStorage.getItem(storageKey));
   if (saved) {
     includeAdvanced.checked = saved.includeAdvanced ??
-      ['actualPay', 'studentLoans', 'childcare', 'healthcare', 'phoneInternet', 'savings', 'secondOffer'].some(name => Boolean(saved[name]));
+      ['actualPay', 'studentLoans', 'childcare', 'healthcare', 'phoneInternet', 'savings'].some(name => Boolean(saved[name]));
     if (Object.hasOwn(householdCosts, saved.household) || saved.household === 'custom') {
       household.value = saved.household;
     } else {

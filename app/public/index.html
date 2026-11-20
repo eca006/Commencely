@@ -1,16 +1,14 @@
 <!doctype html>
 <html lang="en">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Commencely — Home</title><link rel="stylesheet" href="/style.css?v=directory"><link rel="stylesheet" href="/vendor/phosphor.css">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Commencely — Home</title><link rel="stylesheet" href="/style.css?v=job-preview"><link rel="stylesheet" href="/vendor/phosphor.css">
 </head>
 <body class="app-shell home-shell">
 <header class="app-header">
+  <div class="guide-banner"><span>Northwest Arkansas Graduate Guide</span><span>Career discovery · Northwest Arkansas</span><span>Fayetteville · Bentonville · Rogers · Springdale</span></div>
   <div class="app-header-inner">
-    <a class="app-wordmark" href="/">Commencely</a>
-    <nav class="app-nav" aria-label="Main"><a href="/" data-destination="home" aria-current="page"><i class="ph ph-house" aria-hidden="true"></i><span>Home</span></a><a href="/#jobs" data-destination="jobs"><i class="ph ph-magnifying-glass" aria-hidden="true"></i><span>Jobs</span></a><a href="/applications" data-destination="saved"><i class="ph ph-bookmark-simple" aria-hidden="true"></i><span>Saved</span></a><a href="/budget" data-destination="budget"><i class="ph ph-calculator" aria-hidden="true"></i><span>Budget</span></a></nav>
-    <details class="app-menu">
-      <summary aria-label="More tools"><i class="ph ph-list" aria-hidden="true"></i></summary>
-      <nav aria-label="More tools"><a href="/resume">Résumé builder</a><a href="/support">Local support</a></nav>
-    </details>
+    <a class="app-wordmark" href="/">Commencely</a><span class="guide-edition">Career &amp; Launch Guide</span>
+    <nav class="app-nav" aria-label="Main"><a href="/" data-destination="home" aria-current="page"><i class="ph ph-house" aria-hidden="true"></i> <span>Home</span></a><a href="/jobs" data-destination="jobs"><i class="ph ph-magnifying-glass" aria-hidden="true"></i> <span>Jobs</span></a><a href="/applications" data-destination="saved"><i class="ph ph-bookmark-simple" aria-hidden="true"></i> <span>Saved</span></a><a href="/budget" data-destination="budget"><i class="ph ph-calculator" aria-hidden="true"></i> <span>Budget</span></a><a href="/resume" data-destination="resume"><i class="ph ph-file-text" aria-hidden="true"></i> <span>Résumé</span></a><a href="/support" data-destination="support"><i class="ph ph-handshake" aria-hidden="true"></i> <span>Local Support</span></a></nav>
+    <a class="guide-account" href="/sign-in" data-account-link>Sign in</a>
   </div>
 </header>
 <main class="app-main">
@@ -23,30 +21,35 @@
     </figure>
     <div class="editorial-wrap editorial-lead">
       <p class="editorial-eyebrow">A career guide for Northwest Arkansas</p>
-      <h1 id="home-heading">You did the studying.<br>We'll do the searching.</h1>
+      <h1 id="home-heading">You did the studying.<br>We'll do the <em>searching.</em></h1>
       <p class="editorial-intro">Find local work, build your résumé, and see what the pay could mean for your monthly budget.</p>
-      <a class="app-action" href="#careers">Explore career directions <i class="ph ph-arrow-up-right" aria-hidden="true"></i></a>
+      <div class="hero-actions"><a class="app-action" href="#careers">Explore career directions <i class="ph ph-arrow-up-right" aria-hidden="true"></i></a><a class="guide-button" href="/jobs">Browse all jobs</a></div>
     </div>
   </section>
+  <div class="home-facts"><dl class="editorial-wrap"><div><dt>Coverage</dt><dd>Northwest Arkansas</dd></div><div><dt>Experience filter</dt><dd>Up to 3 years required</dd></div><div><dt>Focus</dt><dd>Early-career business roles</dd></div><div><dt>Launch tools</dt><dd>5 career tools</dd></div></dl></div>
   <section class="editorial-wrap editorial-directory" aria-labelledby="career-tools-heading">
     <div class="editorial-directory-head">
       <h2 id="career-tools-heading">Career tools</h2>
       <p>Pick up wherever you are in your search.</p>
     </div>
     <nav class="editorial-tools" aria-label="Career tools">
-      <a href="#jobs"><strong>Find jobs</strong><span>Explore local openings.</span></a>
-      <a href="/applications"><strong>Saved jobs</strong><span>Keep track of applications.</span></a>
-      <a href="/resume"><strong>Résumé builder</strong><span>Get ready to apply.</span></a>
-      <a href="/budget"><strong>Monthly budget</strong><span>See how the pay adds up.</span></a>
-      <a href="/support"><strong>Local support</strong><span>Find resources nearby.</span></a>
+      <a href="/jobs"><strong>Find jobs</strong><span>Explore local openings by city and experience.</span><b>Find jobs →</b></a>
+      <a href="/applications"><strong>Saved jobs</strong><span>Track saved roles and application stages.</span><b>View saved →</b></a>
+      <a href="/resume"><strong>Résumé builder</strong><span>Build, preview, and download your résumé.</span><b>Build résumé →</b></a>
+      <a href="/budget"><strong>Monthly budget</strong><span>Compare starting pay with local living costs.</span><b>Calculate →</b></a>
+      <a href="/support"><strong>Local support</strong><span>Find interview attire, transit, and career coaching.</span><b>Find resources →</b></a>
     </nav>
   </section>
 </div>
 <section id="careers" class="career-view" aria-labelledby="questionnaire-title">
-<h2 id="questionnaire-title">Explore career directions</h2>
-<p>Choose what sounds interesting to you. These suggestions reflect interests, not whether you meet a job’s qualifications.</p>
-<p>Answer once and jobs will load for the direction your answers point toward most. If the directions tie, choose one to explore. When you return, your last search loads automatically.</p>
-<details id="questionnaire-panel" open><summary>Edit career answers</summary>
+<div class="career-copy"><p class="editorial-eyebrow">Interactive pathfinder</p><h2 id="questionnaire-title">Explore career directions</h2>
+<p>Answer three quick questions to see which career direction best matches your interests.</p>
+<div class="career-fields">
+  <article><strong>Marketing &amp; Communications</strong><p>Content, campaigns, brand storytelling, and digital media.</p></article>
+  <article><strong>Sales &amp; Customer Relationships</strong><p>Client conversations, account development, and customer support.</p></article>
+  <article><strong>Business Operations &amp; Coordination</strong><p>Project logistics, team workflows, and process improvement.</p></article>
+</div></div><div class="career-survey">
+<details id="questionnaire-panel" open><summary>Quick 3-question survey</summary>
 <form id="questionnaire">
 <label for="interest">Which activity interests you most?</label>
 <select id="interest" name="interest" required><option value="">Choose an activity</option><option value="marketing">Creating content and promoting ideas</option><option value="sales">Talking with customers and building relationships</option><option value="operations">Organizing projects and improving processes</option></select>
@@ -58,25 +61,38 @@
 </form>
 </details>
 <p id="profile-status" role="status"></p>
-<button id="clear-profile" type="button">Clear saved answers</button>
-<p class="note">Answers are saved in this browser on this computer. This is a simple starting questionnaire, not a validated career assessment.</p>
+<button id="clear-profile" type="button">Clear</button>
+<p class="note">Guest answers stay in this browser tab, including refreshes. This is a simple starting questionnaire, not a validated career assessment.</p>
 <p id="automatic-search-status" role="status"></p>
-<div id="directions" aria-live="polite"></div>
+<div id="directions" aria-live="polite"></div></div>
 </section>
 <section id="jobs" class="jobs-view" aria-labelledby="job-search-title">
-<h1 id="job-search-title" tabindex="-1">Find jobs</h1>
-<p class="page-intro">Explore opportunities in Northwest Arkansas.</p>
+<div class="page-heading"><p class="breadcrumbs"><a href="/">Commencely</a> / Jobs</p><p class="editorial-eyebrow">Local opportunities · Early-career roles</p><h1 id="job-search-title" tabindex="-1">Find your next opportunity.</h1><div class="heading-row"><p class="page-intro">Explore Northwest Arkansas roles. Search by title or location and compare the experience employers ask for.</p></div></div>
 <form id="search">
 
-<label for="direction">Career direction</label>
-<select id="direction" name="direction"><option value="">General keyword search</option><option value="marketing">Marketing and communications</option><option value="sales">Sales and customer relationships</option><option value="operations">Business operations and coordination</option></select>
-<label for="keywords">Job title or keyword</label><input id="keywords" name="keywords" value="marketing" maxlength="120">
-<label for="location">Location</label><input id="location" name="location" value="Fayetteville, Arkansas" required maxlength="120">
+<div class="search-field"><label for="keywords">Job title or keyword</label><input id="keywords" name="keywords" placeholder="e.g. analyst, marketing…" maxlength="120"></div>
+<div class="search-field"><label for="location">Location</label><input id="location" name="location" value="Fayetteville, Arkansas" required maxlength="120"></div>
+<input type="hidden" name="experienceOnly" value="yes">
+<div class="search-field"><label for="experience-filter">Experience</label>
+<select id="experience-filter" name="experienceFilter">
+<option value="graduate">New graduate matches</option>
+<option value="zero">No experience required (0 years)</option>
+<option value="stated">Stated minimum of 3 years or less</option>
+<option value="broader">Include unclear requirements</option>
+</select></div>
+<div class="search-field"><label for="business-major">Walton business major</label><select id="business-major" name="major"><option value="">All business majors</option></select></div>
 <button type="submit">Search jobs</button>
+<button type="button" id="browse-experience">Browse jobs for new graduates</button><a class="jump-results" href="#results">Jump to results</a>
 </form>
-<p id="status" role="status" aria-live="polite">Enter a search to load jobs.</p>
-<section id="results" aria-label="Job results"></section>
+<div class="guide-columns"><div><p id="status" role="status" aria-live="polite">Jobs load automatically when you open this page.</p>
+<details id="job-sources" hidden>
+<summary>Search coverage</summary>
+<p id="job-source-status"></p>
+</details>
+<section id="results" aria-label="Job results" tabindex="-1"></section>
+<button type="submit" form="search" id="load-more-jobs" hidden>Check more Adzuna listings</button>
 <p>Jobs by <a href="https://www.adzuna.com" target="_blank" rel="noopener noreferrer">Adzuna</a></p>
+<p class="note">Explore <a href="https://walton.uark.edu/academics/undergraduate-degrees.php">Walton College’s undergraduate programs</a>.</p>
 <p class="note">Experience summaries are based on the available job description. Check the posting for full requirements.</p>
-</section>
-</main><script type="module" src="/client.js?v=experience-summary"></script></body></html>
+</div><aside class="guide-rail"><section class="guide-panel"><h2><i class="ph ph-calculator" aria-hidden="true"></i> Estimate your take-home pay</h2><p>See how a salary could cover rent, commuting, and savings in Northwest Arkansas.</p><a class="app-action" href="/budget">Open budget calculator</a></section><section class="guide-panel"><h2><i class="ph ph-sliders" aria-hidden="true"></i> The experience filter</h2><p>Three years is the cutoff for the stated minimum. A posting that lists 3–5 years can qualify when three is the minimum. New graduate matches may also include roles where the minimum is unclear.</p><a href="/resume">Open the résumé studio →</a></section><section class="guide-panel"><h2><i class="ph ph-t-shirt" aria-hidden="true"></i> Interview attire nearby</h2><p>Find professional clothing and career support before an interview.</p><a href="/support#clothing-help">Explore local support →</a></section></aside></div></section>
+</main><footer class="site-footer"><div class="editorial-wrap"><span><strong>Commencely</strong> · A career guide for Northwest Arkansas graduates</span><span>Fayetteville · Bentonville · Rogers · Springdale</span></div></footer><script type="module" src="/client.js?v=walton-majors"></script></body></html>

@@ -1,7 +1,9 @@
+import { originalStorage } from './resume-storage.js';
+import { id, profileStorage } from './profile-storage.js';
 import {downloadResumeWord} from './resume-word.js';
 import {initResumePicker} from './resume-picker.js';
 import {templateDesign,resumeTemplates,careerFields} from './resume-templates.js';
-import {readResumeText,keepOriginalResume,parseResumeText} from './resume-import.js';
+import {readResumeText,parseResumeText,extractResumeHeader} from './resume-import.js';
 import {findSkills,appendSkill,summarySuggestions} from './resume-guidance.js';
 import {downloadResumePDF} from './resume-pdf.js';
 import {buildGuidedResume,resumeText,resumeMarkup,resumeStyles,resumeHTML,hasResumeContent,suggestedGuidedResume,applyResumeEdits,arrangeResume,resumeSectionNames,resumeDesignClasses,cleanResumeWording} from './resume-model.js';
@@ -78,8 +80,11 @@ function answers(){
 }
 function render(){
   const model=currentResume();
-  preview.innerHTML=resumeMarkup(model);
-  for(const node of preview.querySelectorAll('[data-resume-path]')){node.contentEditable='plaintext-only';node.setAttribute('role','textbox');node.setAttribute('aria-label','Edit '+node.textContent.slice(0,90));node.spellcheck=true;}
+  preview.innerHTML=resumeMarkup({...model,photoSlot:'upload'});
+  preview.querySelector('button.resume-photo-slot')?.addEventListener('click', () => {
+    document.querySelector('#builder-photo').click();
+  });
+  for(const node of preview.querySelectorAll('[data-resume-path]')){node.contentEditable='plaintext-only';if(node.tagName!=='LI')node.setAttribute('role','textbox');node.setAttribute('aria-label','Edit '+node.textContent.slice(0,90));node.spellcheck=true;}
   preview.hidden=false;preview.className='resume-document '+resumeDesignClasses(design);
   const content=hasResumeContent(model);
   for(const id of ['builder-download','builder-print','builder-edit','builder-pdf','top-download','builder-text','builder-word'])document.getElementById(id).disabled=!content;
@@ -118,20 +123,27 @@ form.addEventListener('submit',event=>event.preventDefault());form.addEventListe
 document.querySelector('#builder-next').addEventListener('click',()=>{const invalid=document.querySelector('[data-step="'+step+'"] :invalid');if(invalid){invalid.reportValidity();return;}maxStep=Math.max(maxStep,Math.min(steps.length-1,step+1));showStep(Math.min(steps.length-1,step+1));queueAutosave();});
 document.querySelector('#builder-back').addEventListener('click',()=>{if(step===0)setStage('choice');else showStep(step-1);queueAutosave();});
 document.querySelector('#save-builder').addEventListener('click',()=>{
-  try{const serialized=JSON.stringify(snapshot());localStorage.setItem(storageKey,serialized);if(localStorage.getItem(storageKey)!==serialized)throw new Error();savedAnswers=serialized;render();status.textContent='Progress saved on this browser. You can leave and return to your answers.';}
+  try{const serialized=JSON.stringify(snapshot());profileStorage.setItem(storageKey,serialized);if(profileStorage.getItem(storageKey)!==serialized)throw new Error();savedAnswers=serialized;render();status.textContent=id?'All changes saved in this browser.':'Progress saved for this browser tab. Download a copy before closing the tab.';}
   catch{status.textContent='Could not save progress in this browser. Keep this page open and download your resume when ready.';}
 });
 document.querySelector('#builder-download').addEventListener('click',()=>{const url=URL.createObjectURL(new Blob([resumeHTML(currentResume())],{type:'text/html;charset=utf-8'}));const link=document.createElement('a');link.href=url;link.download='Commencely-resume.html';document.body.append(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);status.textContent='Download requested. Check your browser downloads.';});
 document.querySelector('#builder-print').addEventListener('click',()=>window.print());
 document.querySelector('#builder-edit').addEventListener('click',()=>{
   const key='commencely-builder-edit-v1';const model=currentResume();
-  try{const previous=localStorage.getItem(key);if(previous&&previous!==JSON.stringify(model)&&!confirm('Replace your previous full-text builder copy with these answers?'))return;localStorage.setItem(key,JSON.stringify(model));location.href='/resume/edit?builder=1';}
+  try{const previous=profileStorage.getItem(key);if(previous&&previous!==JSON.stringify(model)&&!confirm('Replace your previous full-text builder copy with these answers?'))return;profileStorage.setItem(key,JSON.stringify(model));location.href='/resume/edit?builder=1';}
   catch{status.textContent='Could not open a saved text copy. You can download your resume here instead.';}
 });
 let saved;
-try{saved=JSON.parse(localStorage.getItem(storageKey));}catch{}
+try{saved=JSON.parse(profileStorage.getItem(storageKey));}catch{}
 if(saved&&typeof saved==='object'&&!Array.isArray(saved)){
   for(const name of answerFields)if(typeof saved[name]==='string')form.elements[name].value=saved[name];
+  if (form.elements.importedText.value) {
+    const { header, remaining } = extractResumeHeader(form.elements.importedText.value);
+    for (const [name, value] of Object.entries(header)) {
+      if (!form.elements[name].value.trim()) form.elements[name].value = value;
+    }
+    form.elements.importedText.value = remaining;
+  }
   if(!saved.firstName&&typeof saved.name==='string'){const parts=saved.name.trim().split(/\s+/);form.elements.firstName.value=parts.shift()||'';form.elements.lastName.value=parts.join(' ');}
   if(!saved.state&&typeof saved.city==='string'){const match=saved.city.match(/^(.*?)[, ]+([A-Z]{2})$/);if(match){form.elements.city.value=match[1];form.elements.state.value=match[2];}}
   selectedExtras=Array.isArray(saved._selectedExtras)?saved._selectedExtras:[];educationLevel=typeof saved._educationLevel==='string'?saved._educationLevel:'';
@@ -152,7 +164,7 @@ if(saved&&typeof saved==='object'&&!Array.isArray(saved)){
   photo=typeof saved._photo==='string'?saved._photo:'';
   savedAnswers=JSON.stringify(snapshot());status.textContent='Your saved answers are ready. Continue through the steps to review your resume.';
 }else for(const kind of Object.keys(fields))addEntry(kind);
-const routeStage={'/build-resume/start':'entry','/build-resume':'intro','/build-resume/choose-template':'templates','/build-resume/select-resume':'choice'}[location.pathname];
+const routeStage={'/resume/build':'entry','/build-resume/start':'entry','/build-resume':'intro','/build-resume/choose-template':'templates','/build-resume/select-resume':'choice'}[location.pathname];
 if(routeStage)stage=routeStage;
 const routeSection=sectionSlugs.indexOf(location.pathname.split('/').at(-1));if(location.pathname.startsWith('/build-resume/section/')&&routeSection>=0){stage='wizard';step=Math.min(routeSection,maxStep);}
 preview.addEventListener('input',event=>{
@@ -209,7 +221,7 @@ function renderLayout(){
 }
 function queueAutosave(){if(!ready)return;clearTimeout(autosaveTimer);autosaveTimer=setTimeout(persist,600);}
 function persist(){
-  try{const serialized=JSON.stringify(snapshot());localStorage.setItem(storageKey,serialized);savedAnswers=serialized;saveState();status.textContent='All changes saved in this browser.';}
+  try{const serialized=JSON.stringify(snapshot());profileStorage.setItem(storageKey,serialized);savedAnswers=serialized;saveState();status.textContent=id?'All changes saved in this browser.':'Changes kept in this browser tab, including refreshes. Download a copy before closing the tab.';}
   catch{status.textContent='Could not save automatically. Keep this page open and download a copy.';}
 }
 window.addEventListener('pagehide',()=>{if(ready)persist();});
@@ -330,7 +342,14 @@ document.querySelector('#change-template').addEventListener('click',()=>{changin
 document.querySelector('#choice-back').addEventListener('click',()=>setStage('templates'));
 for(const input of document.querySelectorAll('[name="build-mode"]'))input.addEventListener('change',()=>{preferredBuildMode=input.value;document.querySelector('#import-options').hidden=document.querySelector('[name="build-mode"]:checked').value!=='import';});
 document.querySelector('#builder-import-file').addEventListener('change',async event=>{
-  const file=event.target.files[0];if(!file)return;const status=document.querySelector('#import-status');status.textContent='Reading your file locally…';
+  const file=event.target.files[0];if(!file)return;const status=document.querySelector('#import-status');
+  if (file.size > 5 * 1024 * 1024) {
+    status.textContent = 'Your resume file is too large. Choose a file up to 5 MB.';
+    alert(status.textContent);
+    event.target.value = '';
+    return;
+  }
+  status.textContent='Reading your file locally…';
   try{const text=await readResumeText(file);if(!text.trim())throw new Error('No selectable text was found. Paste your resume text below instead.');if(text.length>50000)throw new Error('This resume has more than 50,000 characters. Paste the sections you need below.');document.querySelector('#import-review').value=text;importedFile=file;status.textContent='Text ready. Review it, then continue. Your original file will be kept unchanged.';}
   catch(error){importedFile=null;status.textContent=error.message||'Could not read this file. Paste your text below instead.';}
 });
@@ -338,21 +357,76 @@ document.querySelector('#choice-continue').addEventListener('click',async()=>{
   if(document.querySelector('[name="build-mode"]:checked').value==='import'){
     const text=document.querySelector('#import-review').value.trim();if(!text){document.querySelector('#import-status').textContent='Choose a resume file or paste your text before continuing.';return;}
     if(hasResumeContent(currentResume())&&!document.querySelector('#replace-import').checked){document.querySelector('#import-status').textContent='To replace the current builder sections, check the replacement option below. Your contact details and original file will be kept.';return;}
-    try{if(importedFile)await keepOriginalResume(importedFile);}catch{document.querySelector('#import-status').textContent='The original could not be saved in this browser. Keep your own copy before importing.';return;}
+    try{if(importedFile)await originalStorage('put',{blob:importedFile,name:importedFile.name,type:importedFile.type});}catch{document.querySelector('#import-status').textContent='The original could not be saved in this browser. Keep your own copy before importing.';return;}
     const parsed=parseResumeText(text);previewEdits={};wordingMode='exact';
+    for (const [name, value] of Object.entries(parsed.header)) {
+      if (!form.elements[name].value.trim()) form.elements[name].value = value;
+    }
     for(const name of ['summary','skills','importedText','certifications','languages','awards','activities','references'])form.elements[name].value=parsed[name]||'';
     for(const kind of Object.keys(fields)){document.getElementById(kind+'-entries').replaceChildren();for(const value of parsed[kind]?.length?parsed[kind]:[{}])addEntry(kind,value);}
     selectedExtras=['importedText','projects'].filter(key=>key==='projects'?parsed.projects.length:parsed.importedText);renderExtraOptions();renderSkillSuggestions();
-    status.textContent='Imported text is ready. Check each section and add your header details. The original file is unchanged.';
+    status.textContent='Imported text is ready. Review your name, contact information, and each section.';
   }
   setStage('wizard');showStep(step,false);queueAutosave();
 });
-document.querySelector('#builder-photo').addEventListener('change',event=>{
-  const file=event.target.files[0];if(!file)return;const status=document.querySelector('#photo-status');
-  if(!['image/jpeg','image/png'].includes(file.type)||file.size>300000){status.textContent='Choose a JPG or PNG smaller than 300 KB.';return;}
-  const reader=new FileReader();reader.onload=()=>{photo=reader.result;status.textContent='Photo added locally.';changed();};reader.onerror=()=>{status.textContent='Could not read this photo.';};reader.readAsDataURL(file);
+let photoRevision = 0;
+document.querySelector('#builder-photo').addEventListener('change', async event => {
+  const input = event.target;
+  const file = input.files[0];
+  if (!file) return;
+  const revision = ++photoRevision;
+  const feedback = document.querySelector('#photo-status');
+  const tell = message => { feedback.textContent = message; status.textContent = message; };
+  if (file.size > 10 * 1024 * 1024) {
+    const message = 'Your photo is too large. Choose a JPG, PNG, or WebP photo up to 10 MB.';
+    tell(message);
+    alert(message);
+    input.value = '';
+    return;
+  }
+  if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+    tell('Choose a JPG, PNG, or WebP photo up to 10 MB.');
+    input.value = '';
+    return;
+  }
+  tell('Preparing your photo…');
+  const url = URL.createObjectURL(file);
+  try {
+    const image = new Image();
+    image.src = url;
+    await image.decode();
+    const scale = Math.min(1, 600 / Math.max(image.naturalWidth, image.naturalHeight));
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.max(1, Math.round(image.naturalWidth * scale));
+    canvas.height = Math.max(1, Math.round(image.naturalHeight * scale));
+    const context = canvas.getContext('2d');
+    context.fillStyle = '#ffffff';
+    context.fillRect(0, 0, canvas.width, canvas.height);
+    context.drawImage(image, 0, 0, canvas.width, canvas.height);
+    const prepared = canvas.toDataURL('image/jpeg', .82);
+    if (prepared.length >= 420000) throw new Error('This photo could not be prepared. Try a smaller image.');
+    if (revision !== photoRevision) return;
+    photo = prepared;
+    design.hasPhoto = true;
+    changed();
+    persist();
+    feedback.textContent = 'Photo added to your resume.';
+  } catch (error) {
+    if (revision === photoRevision) tell(error.message === 'This photo could not be prepared. Try a smaller image.'
+      ? error.message : 'This photo could not be opened. Choose another JPG, PNG, or WebP image.');
+  } finally {
+    URL.revokeObjectURL(url);
+    if (revision === photoRevision) input.value = '';
+  }
 });
-document.querySelector('#remove-photo').addEventListener('click',()=>{photo='';document.querySelector('#builder-photo').value='';document.querySelector('#photo-status').textContent='Photo removed.';changed();});
+document.querySelector('#remove-photo').addEventListener('click', () => {
+  photoRevision++;
+  photo = '';
+  document.querySelector('#builder-photo').value = '';
+  document.querySelector('#photo-status').textContent = 'Photo removed.';
+  changed();
+  persist();
+});
 let zoom=1;
 function setZoom(value){zoom=Math.max(.6,Math.min(1.6,value));document.querySelector('#large-preview').style.zoom=zoom;document.querySelector('#zoom-value').textContent=Math.round(zoom*100)+'%';}
 for(const [id,change] of [['zoom-in',.1],['zoom-out',-.1]])document.getElementById(id).addEventListener('click',()=>setZoom(zoom+change));document.querySelector('#zoom-reset').addEventListener('click',()=>setZoom(1));

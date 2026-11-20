@@ -6,19 +6,51 @@ export function buildResumeWord(model,api){
   const size=design.size==='small'?20:design.size==='large'?24:22;
   const accent=(design.color==='default'||!design.color?'#222222':templateColors.find(color=>color.id===design.color)?.hex||'#222222').slice(1);
   const space=design.spacing==='tight'?60:design.spacing==='relaxed'?180:100;
-  const paragraph=(text,options={})=>new Paragraph({children:[new TextRun({text:String(text||''),font,size,...options})],spacing:{after:space},...(options.bullet?{bullet:{level:0}}:{})});
+  const paragraph=(text,options={},layout={})=>new Paragraph({children:[new TextRun({text:String(text||''),font,size,...options})],spacing:{after:space},...(options.bullet?{bullet:{level:0}}:{}),...layout});
+  const noBorder={style:BorderStyle.NONE,size:0,color:'FFFFFF'};
+  const tableBorders={top:noBorder,bottom:noBorder,left:noBorder,right:noBorder,insideHorizontal:noBorder,insideVertical:noBorder};
+  const table=(columns)=>new Table({width:{size:100,type:WidthType.PERCENTAGE},borders:tableBorders,rows:[new TableRow({
+    children:columns.map(([percent,children])=>new TableCell({width:{size:percent,type:WidthType.PERCENTAGE},children}))
+  })]});
+  const rule={style:BorderStyle.SINGLE,size:8,color:accent,space:4};
   function sections(items){return items.flatMap(section=>[
-    paragraph(section.title,{bold:true,color:accent}),
+    paragraph(section.title,{bold:true,color:accent},
+      design.sectionStyle==='label'?{shading:{fill:'EEEEEE'}}:design.graphics||design.sectionStyle==='ruled'?{border:{bottom:rule}}:{}),
     ...section.entries.flatMap(entry=>[
       ...(entry.title?[paragraph(entry.title,{bold:true})]:[]),...(entry.dates?[paragraph(entry.dates,{size:18})]:[]),...(entry.organization?[paragraph(entry.organization)]:[]),...(entry.text?entry.text.split('\n').map(line=>paragraph(line)):[]),...(entry.bullets||[]).map(line=>paragraph(line,{bullet:true}))
     ])
   ]);}
-  const children=[paragraph(model.name,{bold:true,size:40,color:accent}),paragraph(model.contact,{size:18})];
+  const headerStyle=design.headerStyle||'standard';
+  const alignment=design.headerAlign||(design.template==='modern'?'left':'center');
+  const band=headerStyle==='band';
+  const box=headerStyle==='frame';
+  const shared={alignment,...(band?{shading:{fill:accent}}:{})};
+  const nameSettings={...shared};
+  const contactSettings={...shared};
+  if (box) {
+    nameSettings.border={top:rule,left:rule,right:rule};
+    contactSettings.border={bottom:rule,left:rule,right:rule};
+  } else if (headerStyle==='top-rule') {
+    nameSettings.border={top:{...rule,size:24}};
+  } else if (headerStyle==='accent') {
+    nameSettings.border={left:{...rule,size:24}};
+    contactSettings.border=nameSettings.border;
+  } else if (headerStyle==='double-rule') {
+    contactSettings.border={bottom:{...rule,style:BorderStyle.DOUBLE}};
+  }
+  const children=headerStyle==='split'?[table([
+    [55,[paragraph(model.name,{bold:true,size:40,color:accent})]],
+    [45,[paragraph(model.contact,{size:18},{alignment:'right'})]]
+  ])]:[
+    paragraph(model.name,{bold:true,size:40,color:band?'FFFFFF':accent},nameSettings),
+    paragraph(model.contact,{size:18,color:band?'FFFFFF':'111111'},contactSettings)
+  ];
   if(design.hasPhoto&&safeResumePhoto(model.photo)){const data=Uint8Array.from(atob(model.photo.split(',')[1]),char=>char.charCodeAt(0));children.unshift(new Paragraph({children:[new api.ImageRun({data,type:model.photo.startsWith('data:image/png')?'png':'jpg',transformation:{width:70,height:70}})]}));}
   if(design.columns===2){
     const side=['skills','languages','certifications','awards','activities','references'];
-    const noBorder={style:BorderStyle.NONE,size:0,color:'FFFFFF'};
-    children.push(new Table({width:{size:100,type:WidthType.PERCENTAGE},borders:{top:noBorder,bottom:noBorder,left:noBorder,right:noBorder,insideHorizontal:noBorder,insideVertical:noBorder},rows:[new TableRow({children:[new TableCell({width:{size:32,type:WidthType.PERCENTAGE},children:sections((model.sections||[]).filter(section=>side.includes(section.key)))}),new TableCell({width:{size:68,type:WidthType.PERCENTAGE},children:sections((model.sections||[]).filter(section=>!side.includes(section.key)))})]})]}));
+    const sidebar=[32,sections((model.sections||[]).filter(section=>side.includes(section.key)))];
+    const primary=[68,sections((model.sections||[]).filter(section=>!side.includes(section.key)))];
+    children.push(table(design.sidebar==='right'?[primary,sidebar]:[sidebar,primary]));
   }else children.push(...sections(model.sections||[]));
   const margin=design.margins==='narrow'?680:design.margins==='wide'?1360:1020;
   return new Document({styles:{default:{document:{run:{font,size}}}},sections:[{properties:{page:{margin:{top:margin,bottom:margin,left:margin,right:margin}}},children}]});

@@ -4,28 +4,24 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Commencely — Monthly budget</title>
-  <link rel="stylesheet" href="/style.css?v=heritage">
+  <link rel="stylesheet" href="/style.css?v=brand-budget">
 <link rel="stylesheet" href="/vendor/phosphor.css">
 </head>
-<body class="app-shell">
+<body class="app-shell budget-shell">
 <header class="app-header">
+  <div class="guide-banner"><span>Northwest Arkansas Graduate Guide</span><span>Monthly budget planner</span><span>Fayetteville–Springdale–Rogers metro</span></div>
   <div class="app-header-inner">
-    <a class="app-wordmark" href="/">Commencely</a>
-    <nav class="app-nav" aria-label="Main"><a href="/" data-destination="home"><i class="ph ph-house" aria-hidden="true"></i><span>Home</span></a><a href="/#jobs" data-destination="jobs"><i class="ph ph-magnifying-glass" aria-hidden="true"></i><span>Jobs</span></a><a href="/applications" data-destination="saved"><i class="ph ph-bookmark-simple" aria-hidden="true"></i><span>Saved</span></a><a href="/budget" data-destination="budget" aria-current="page"><i class="ph ph-calculator" aria-hidden="true"></i><span>Budget</span></a></nav>
-    <details class="app-menu">
-      <summary aria-label="More tools"><i class="ph ph-list" aria-hidden="true"></i></summary>
-      <nav aria-label="More tools"><a href="/resume">Résumé builder</a><a href="/support">Local support</a></nav>
-    </details>
+    <a class="app-wordmark" href="/">Commencely</a><span class="guide-edition">Career &amp; Launch Guide</span>
+    <nav class="app-nav" aria-label="Main"><a href="/" data-destination="home"><i class="ph ph-house" aria-hidden="true"></i> <span>Home</span></a><a href="/jobs" data-destination="jobs"><i class="ph ph-magnifying-glass" aria-hidden="true"></i> <span>Jobs</span></a><a href="/applications" data-destination="saved"><i class="ph ph-bookmark-simple" aria-hidden="true"></i> <span>Saved</span></a><a href="/budget" data-destination="budget" aria-current="page"><i class="ph ph-calculator" aria-hidden="true"></i> <span>Budget</span></a><a href="/resume" data-destination="resume"><i class="ph ph-file-text" aria-hidden="true"></i> <span>Résumé</span></a><a href="/support" data-destination="support"><i class="ph ph-handshake" aria-hidden="true"></i> <span>Local Support</span></a></nav>
+    <a class="guide-account" href="/sign-in" data-account-link>Sign in</a>
   </div>
 </header>
 <main class="app-main">
-<h1>Monthly budget</h1>
-<p class="page-intro">See what’s left after monthly expenses. Choose your household to fill in estimates, then adjust any amount.</p>
-<div class="budget-layout">
+<div class="page-heading"><p class="breadcrumbs"><a href="/">Commencely</a> / Monthly budget planner</p><p class="editorial-eyebrow">Interactive financial planner</p><h1>Monthly Budget Calculator</h1><div class="heading-row"><p class="page-intro">Estimate your take-home pay and monthly living costs in Northwest Arkansas. Choose your household and adjust the amounts to fit your plans.</p><span class="heading-callout">Fayetteville–Springdale–Rogers metro</span></div></div><div class="budget-layout">
 <form id="budget-form">
   <div class="budget-fields household-panel">
-  <label for="household">Household size</label>
-  <select id="household" name="household" aria-describedby="household-source">
+  <h2><b>1</b> Household Baseline</h2><p class="budget-field-label">Household size &amp; structure</p><div id="household-presets" class="budget-presets" role="group" aria-label="Household presets"><button type="button" data-value="1-0">1 Adult<small>Solo graduate</small></button><button type="button" data-value="2-0">2 Adults<small>Partner or roommate</small></button><button type="button" data-value="1-1">1 Adult, 1 Child<small>Single parent</small></button><button type="button" data-value="custom">Custom<small>Manual entry</small></button></div>
+  <details class="budget-more-households"><summary>More household sizes</summary><label class="sr-only" for="household">Household size</label><select id="household" name="household" aria-describedby="household-source">
     <option value="1-0">1 person · 1 adult</option>
     <option value="2-0">2 people · 2 adults</option>
     <option value="1-1">2 people · 1 adult, 1 child</option>
@@ -35,16 +31,17 @@
     <option value="1-3">4 people · 1 adult, 3 children</option>
     <option value="2-3">5 people · 2 adults, 3 children</option>
     <option value="custom">Other household · enter your amounts</option>
-  </select>
+  </select></details><p class="note">Presets fill in local housing, grocery, and transportation estimates.</p>
   </div>
-  <fieldset class="budget-fields budget-group"><legend>Income</legend>
-  <label for="income">Annual gross income ($)</label>
-  <input id="income" name="income" type="number" min="0" max="1000000000" step="0.01" value="41579.20" required aria-describedby="income-source">
-  <label for="deductions">Estimated taxes and paycheck deductions (%)</label>
-  <input id="deductions" name="deductions" type="number" min="0" max="100" step="0.1" value="25" required aria-describedby="assumptions">
+  <fieldset class="budget-fields budget-group"><legend><b>2</b> Gross Pay &amp; Take-Home</legend>
+  <div class="budget-input budget-income"><label for="income">Annual gross income ($)</label>
+  <div class="amount-field"><span aria-hidden="true">$</span><input id="income" name="income" type="number" min="0" max="1000000000" step="0.01" value="41579.20" required aria-describedby="income-source"><span aria-hidden="true">/ year</span></div><p class="note">Starting point based on the local median hourly wage.</p></div>
+  <div class="budget-input budget-deductions"><label for="deductions">Estimated taxes and paycheck deductions (%)</label>
+  <input id="deductions-slider" type="range" min="0" max="100" step="0.1" value="25" aria-label="Adjust paycheck deductions percentage">
+  <input id="deductions" name="deductions" type="number" min="0" max="100" step="0.1" value="25" required aria-describedby="assumptions"><p class="note">Adjust the estimate for taxes and other paycheck deductions.</p></div><div class="budget-net"><span>Calculated monthly net pay</span><strong id="gross-net"></strong></div>
   </fieldset>
-  <fieldset class="budget-fields budget-group"><legend>Monthly expenses</legend>
-  <label for="benchmark">Optional monthly housing estimate</label>
+  <fieldset class="budget-fields budget-group"><legend><b>3</b> Monthly Living Expenses</legend>
+  <div class="budget-input budget-benchmark"><p class="budget-field-label">HUD housing benchmarks</p><div id="rent-presets" class="rent-presets" role="group" aria-label="Housing benchmarks"></div><details class="budget-more-households"><summary>More housing options</summary><label for="benchmark">Housing estimate</label>
   <select id="benchmark" name="housingBenchmark">
     <option value="">Choose a HUD benchmark</option>
     <option value="916">Studio · $916</option>
@@ -52,79 +49,84 @@
     <option value="1256">Two bedrooms · $1,256</option>
     <option value="1739">Three bedrooms · $1,739</option>
     <option value="2099">Four bedrooms · $2,099</option>
-  </select>
-  <label for="housing">Monthly rent and utilities ($)</label>
-  <input id="housing" name="housing" type="number" min="0" max="1000000000" step="0.01" aria-describedby="housing-source">
-  <label for="food">Monthly food ($)</label>
-  <input id="food" name="food" type="number" min="0" max="1000000000" step="0.01">
-  <label for="transport">Monthly transportation ($)</label>
-  <input id="transport" name="transport" type="number" min="0" max="1000000000" step="0.01">
-  <label for="other">Other monthly expenses ($)</label>
-  <input id="other" name="other" type="number" min="0" max="1000000000" step="0.01">
+  </select></details></div>
+  <div class="budget-input budget-housing"><label for="housing">Monthly rent and utilities ($)</label>
+  <input id="housing" name="housing" type="number" min="0" max="1000000000" step="0.01" aria-describedby="housing-source"></div>
+  <div class="budget-input budget-food"><label for="food">Monthly food ($)</label>
+  <input id="food" name="food" type="number" min="0" max="1000000000" step="0.01"></div>
+  <div class="budget-input budget-transport"><label for="transport">Monthly transportation ($)</label>
+  <input id="transport" name="transport" type="number" min="0" max="1000000000" step="0.01"></div>
+  <div class="budget-input budget-other"><label for="other">Other monthly expenses ($)</label>
+  <input id="other" name="other" type="number" min="0" max="1000000000" step="0.01"></div>
   </fieldset>
   <details id="advanced-budget">
-    <summary>Advanced options</summary>
-    <label><input type="checkbox" id="include-advanced" name="includeAdvanced"> Include advanced options in my budget</label>
-    <fieldset id="advanced-fields" class="budget-fields" disabled hidden>
-      <legend>Advanced budget inputs</legend>
-      <p class="note">Use an estimate to fill and include it, or enter your own amount and check its Include box. Uncheck any item to remove it from the total and keep the amount. Turning off advanced options keeps your entries for later and excludes them from the estimate.</p>
-      <label for="actual-pay">Actual take-home pay per paycheck ($)</label>
-      <input id="actual-pay" name="actualPay" type="number" min="0" max="1000000000" step="0.01">
-      <label for="pay-frequency">How often you receive that pay</label>
+    <summary><i class="ph ph-sliders" aria-hidden="true"></i> Additional expenses &amp; savings</summary>
+    <label class="budget-include-advanced"><input type="checkbox" id="include-advanced" name="includeAdvanced"> Include advanced options in my budget</label>
+    <fieldset id="advanced-fields" class="budget-fields advanced-grid" disabled hidden>
+      <legend class="visually-hidden">Advanced budget inputs</legend>
+      <p class="note">Choose an estimate or enter your own amount. Use the include checkboxes to control what counts toward the budget.</p>
+      <div class="budget-input"><label for="actual-pay">Actual take-home pay per paycheck ($)</label>
+      <input id="actual-pay" name="actualPay" type="number" min="0" max="1000000000" step="0.01"></div>
+      <div class="budget-input"><label for="pay-frequency">How often you receive that pay</label>
       <select id="pay-frequency" name="payFrequency">
         <option value="12">Monthly</option>
         <option value="24">Twice a month</option>
         <option value="26">Every two weeks</option>
         <option value="52">Weekly</option>
-      </select>
+      </select></div>
       <p class="note">Enter actual pay to use it for your monthly budget. Annual gross income above still drives the housing warning and the first offer estimate.</p>
       <h2>Additional monthly expenses</h2>
       <p class="note">Enter amounts here only if you haven’t already included them in Other monthly expenses.</p>
-      <label for="studentLoans">Student loan payments ($)</label>
-      <input id="studentLoans" name="studentLoans" type="number" min="0" max="1000000000" step="0.01">
-      <label for="childcare">Childcare ($)</label>
+      <div class="budget-input"><label for="studentLoans">Student loan payments ($)</label>
+      <input id="studentLoans" name="studentLoans" type="number" min="0" max="1000000000" step="0.01"></div>
+      <div class="budget-input"><label for="childcare">Childcare ($)</label>
       <input id="childcare" name="childcare" type="number" min="0" max="1000000000" step="0.01">
       <button type="button" data-budget-estimate="childcare" data-label="childcare" hidden></button>
-      <label><input type="checkbox" name="childcareIncluded"> Include childcare in monthly expenses</label>
-      <label for="healthcare">Health care ($)</label>
+      <label class="budget-option"><input type="checkbox" name="childcareIncluded"> Include childcare in monthly expenses</label></div>
+      <div class="budget-input"><label for="healthcare">Health care ($)</label>
       <input id="healthcare" name="healthcare" type="number" min="0" max="1000000000" step="0.01">
       <button type="button" data-budget-estimate="healthcare" data-label="health care" hidden></button>
-      <label><input type="checkbox" name="healthcareIncluded"> Include health care in monthly expenses</label>
-      <label for="phoneInternet">Phone and internet ($)</label>
+      <label class="budget-option"><input type="checkbox" name="healthcareIncluded"> Include health care in monthly expenses</label></div>
+      <div class="budget-input"><label for="phoneInternet">Phone and internet ($)</label>
       <input id="phoneInternet" name="phoneInternet" type="number" min="0" max="1000000000" step="0.01">
       <button type="button" data-budget-estimate="phoneInternet" data-label="phone and internet" hidden></button>
-      <label><input type="checkbox" name="phoneInternetIncluded"> Include phone and internet in monthly expenses</label>
+      <label class="budget-option"><input type="checkbox" name="phoneInternetIncluded"> Include phone and internet in monthly expenses</label></div>
       <p id="estimate-feedback" class="note" role="status"></p>
       <p class="note">Household estimates come from the <a href="https://livingwage.mit.edu/metros/22220">Living Wage Institute’s Northwest Arkansas model</a>. Childcare assumes all adults work. For health care, include only costs you haven’t already subtracted from pay.</p>
-      <label for="savings">Monthly savings target ($)</label>
-      <input id="savings" name="savings" type="number" min="0" max="1000000000" step="0.01">
-      <h2>Compare two job offers</h2>
-      <p class="note">Enter the first offer as annual gross income above and the second offer here. Both use the same deduction percentage, household expenses, and savings target.</p>
-      <label for="second-offer">Second offer annual gross pay ($)</label>
-      <input id="second-offer" name="secondOffer" type="number" min="0" max="1000000000" step="0.01">
+      <div class="budget-input"><label for="savings">Monthly savings target ($)</label>
+      <input id="savings" name="savings" type="number" min="0" max="1000000000" step="0.01"></div>
     </fieldset>
   </details>
-  <button>Save budget</button>
-  <button type="button" id="restore-budget">Restore starting values</button>
-  <p id="budget-status" role="status"></p>
+
+<details id="offer-comparison" open>
+  <summary><i class="ph ph-scales" aria-hidden="true"></i> Compare Two Job Offers</summary>
+  <div class="offer-content">
+    <p>See how a different annual salary changes your monthly cushion.</p>
+    <div class="offer-cards">
+      <section><h3>Offer A · Current</h3><strong id="first-gross"></strong><p id="first-left"></p></section>
+      <section><label for="second-offer">Offer B · Competing</label><div class="amount-field"><span aria-hidden="true">$</span><input id="second-offer" name="secondOffer" type="number" min="0" max="1000000000" step="0.01" value="48000"></div><p id="second-left"></p></section>
+    </div>
+    <p class="note">Both offers use your selected deduction rate, monthly expenses, and savings target.</p>
+  </div>
+</details>
+<button type="button" id="restore-budget" class="budget-reset" hidden>Reset budget</button>
 </form>
 <article id="budget-results" aria-labelledby="budget-heading" aria-live="polite" hidden>
-  <h2 id="budget-heading">Monthly estimate</h2>
-  <p class="budget-balance"><strong id="remaining"></strong></p>
-  <p id="take-home"></p>
-  <p id="expenses"></p>
-  <p id="after-savings" hidden></p>
-  <p id="rent-warning"></p>
-  <div id="offer-comparison" hidden>
-    <table>
-      <caption>Monthly job offer comparison</caption>
-      <thead><tr><th scope="col">Monthly estimate</th><th scope="col">First offer</th><th scope="col">Second offer</th></tr></thead>
-      <tbody>
-        <tr><th scope="row">Take-home pay</th><td id="first-take-home"></td><td id="second-take-home"></td></tr>
-        <tr><th scope="row">Left after expenses and savings</th><td id="first-left"></td><td id="second-left"></td></tr>
-      </tbody>
-    </table>
+  <h2 id="budget-heading">Monthly projected cushion</h2>
+  <p class="budget-balance"><strong id="remaining"></strong> <small>leftover / mo</small></p>
+  <p id="cash-flow"></p>
+  <div class="budget-allocation" id="budget-allocation" hidden>
+    <div class="budget-allocation-heading"><span>Where each dollar goes</span><strong>Monthly take-home pay</strong></div>
+    <div class="budget-bars" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
+    <ul class="budget-legend"><li>Rent</li><li>Living</li><li>Savings</li><li>Cushion</li></ul>
   </div>
+  <p class="budget-total" id="take-home"></p><p class="budget-total" id="expense-housing"></p><p class="budget-total" id="expense-living"></p>
+  <p class="budget-total" id="after-savings" hidden></p>
+  <p class="budget-total" id="expenses"></p>
+  <p id="rent-warning"></p>
+  <div class="budget-actions"><button type="submit" form="budget-form">Save budget</button><button type="button" id="print-budget">Print / Save PDF</button><button type="button" id="reset-summary">Reset budget</button></div>
+  <p id="budget-status" role="status"></p>
+  <a class="guide-button" href="/jobs">Browse Northwest Arkansas jobs →</a>
   <details class="budget-sources"><summary>Estimate sources and assumptions</summary>
     <p class="note" id="household-source">Choosing a household fills in food prepared at home, transportation, and rent with most utilities. These are modeled monthly costs for the Fayetteville–Springdale–Rogers metro. Enter your combined household pay above and adjust the costs below as needed. <a href="https://livingwage.mit.edu/metros/22220">Living Wage Institute, 2026</a></p>
     <p class="note" id="income-source">Starting pay uses the Fayetteville–Springdale–Rogers metro’s median hourly wage of $19.99 across all occupations, multiplied by 2,080 hours for a full-time year. <a href="https://www.bls.gov/oes/2023/may/oes_22220.htm">BLS, May 2023</a></p>
@@ -135,5 +137,5 @@
   <p class="note">The housing warning uses 30% of gross income as a planning benchmark. <a href="https://www.huduser.gov/portal/publications/pdf/National-CHMA-24.pdf">HUD housing affordability analysis</a></p>
 </article>
 </div>
-</main><script type="module" src="/budget.js?v=expense-opt-in"></script></body>
+</main><footer class="site-footer"><div class="editorial-wrap"><span><strong>Commencely</strong> · A career guide for Northwest Arkansas graduates</span><span>Fayetteville · Bentonville · Rogers · Springdale</span></div></footer><script type="module" src="/budget.js?v=offer-cards"></script></body>
 </html>
