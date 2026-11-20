@@ -74,7 +74,7 @@ questionnaire.addEventListener('submit', event => {
   const answers = Object.fromEntries(new FormData(questionnaire));
   showDirections(answers);
   document.querySelector('#questionnaire-panel').open = false;
-  try { profileStorage.setItem(storageKey, JSON.stringify(answers)); profileStatus.textContent = id ? 'Career answers saved. Search again or switch directions below. Equal scores are ties.' : 'Career answers kept in this browser tab, including refreshes. Closing the tab ends this guest visit. Equal scores are ties.'; }
+  try { profileStorage.setItem(storageKey, JSON.stringify(answers)); profileStatus.textContent = profileStorage.notice(id ? 'Career answers saved. Search again or switch directions below. Equal scores are ties.' : 'Career answers kept in this browser tab, including refreshes. Closing the tab ends this guest visit. Equal scores are ties.'); }
   catch { profileStatus.textContent = 'Directions ready. This browser could not save your answers.'; }
 });
 document.querySelector('#clear-profile').addEventListener('click', () => {

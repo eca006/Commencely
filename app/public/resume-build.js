@@ -123,7 +123,7 @@ form.addEventListener('submit',event=>event.preventDefault());form.addEventListe
 document.querySelector('#builder-next').addEventListener('click',()=>{const invalid=document.querySelector('[data-step="'+step+'"] :invalid');if(invalid){invalid.reportValidity();return;}maxStep=Math.max(maxStep,Math.min(steps.length-1,step+1));showStep(Math.min(steps.length-1,step+1));queueAutosave();});
 document.querySelector('#builder-back').addEventListener('click',()=>{if(step===0)setStage('choice');else showStep(step-1);queueAutosave();});
 document.querySelector('#save-builder').addEventListener('click',()=>{
-  try{const serialized=JSON.stringify(snapshot());profileStorage.setItem(storageKey,serialized);if(profileStorage.getItem(storageKey)!==serialized)throw new Error();savedAnswers=serialized;render();status.textContent=id?'All changes saved in this browser.':'Progress saved for this browser tab. Download a copy before closing the tab.';}
+  try{const serialized=JSON.stringify(snapshot());profileStorage.setItem(storageKey,serialized);if(profileStorage.getItem(storageKey)!==serialized)throw new Error();savedAnswers=serialized;render();status.textContent = profileStorage.notice(id?'All changes saved in this browser.':'Progress saved for this browser tab. Download a copy before closing the tab.');}
   catch{status.textContent='Could not save progress in this browser. Keep this page open and download your resume when ready.';}
 });
 document.querySelector('#builder-download').addEventListener('click',()=>{const url=URL.createObjectURL(new Blob([resumeHTML(currentResume())],{type:'text/html;charset=utf-8'}));const link=document.createElement('a');link.href=url;link.download='Commencely-resume.html';document.body.append(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);status.textContent='Download requested. Check your browser downloads.';});
@@ -162,7 +162,7 @@ if(saved&&typeof saved==='object'&&!Array.isArray(saved)){
   stage=['entry','intro','templates','choice','wizard'].includes(saved._stage)?saved._stage:'entry';preferredBuildMode=saved._buildMode==='import'?'import':'new';filters=saved._filters&&typeof saved._filters==='object'?saved._filters:{};
   maxStep=Number.isInteger(saved._maxStep)?Math.max(0,Math.min(6,saved._maxStep)):0;step=Number.isInteger(saved._step)?Math.max(0,Math.min(maxStep,saved._step)):0;
   photo=typeof saved._photo==='string'?saved._photo:'';
-  savedAnswers=JSON.stringify(snapshot());status.textContent='Your saved answers are ready. Continue through the steps to review your resume.';
+  savedAnswers=JSON.stringify(snapshot());status.textContent = profileStorage.notice('Your saved answers are ready. Continue through the steps to review your resume.');
 }else for(const kind of Object.keys(fields))addEntry(kind);
 const routeStage={'/resume/build':'entry','/build-resume/start':'entry','/build-resume':'intro','/build-resume/choose-template':'templates','/build-resume/select-resume':'choice'}[location.pathname];
 if(routeStage)stage=routeStage;
@@ -221,7 +221,7 @@ function renderLayout(){
 }
 function queueAutosave(){if(!ready)return;clearTimeout(autosaveTimer);autosaveTimer=setTimeout(persist,600);}
 function persist(){
-  try{const serialized=JSON.stringify(snapshot());profileStorage.setItem(storageKey,serialized);savedAnswers=serialized;saveState();status.textContent=id?'All changes saved in this browser.':'Changes kept in this browser tab, including refreshes. Download a copy before closing the tab.';}
+  try{const serialized=JSON.stringify(snapshot());profileStorage.setItem(storageKey,serialized);savedAnswers=serialized;saveState();status.textContent = profileStorage.notice(id?'All changes saved in this browser.':'Changes kept in this browser tab, including refreshes. Download a copy before closing the tab.');}
   catch{status.textContent='Could not save automatically. Keep this page open and download a copy.';}
 }
 window.addEventListener('pagehide',()=>{if(ready)persist();});
@@ -350,7 +350,7 @@ document.querySelector('#builder-import-file').addEventListener('change',async e
     return;
   }
   status.textContent='Reading your file locally…';
-  try{const text=await readResumeText(file);if(!text.trim())throw new Error('No selectable text was found. Paste your resume text below instead.');if(text.length>50000)throw new Error('This resume has more than 50,000 characters. Paste the sections you need below.');document.querySelector('#import-review').value=text;importedFile=file;status.textContent='Text ready. Review it, then continue. Your original file will be kept unchanged.';}
+  try{const text=await readResumeText(file);if(!text.trim())throw new Error('No selectable text was found. Paste your resume text below instead.');if(text.length>50000)throw new Error('This resume has more than 50,000 characters. Paste the sections you need below.');document.querySelector('#import-review').value=text;importedFile=file;status.textContent = 'Text ready. Review it, then continue. Your original file will be kept unchanged.';}
   catch(error){importedFile=null;status.textContent=error.message||'Could not read this file. Paste your text below instead.';}
 });
 document.querySelector('#choice-continue').addEventListener('click',async()=>{

@@ -42,7 +42,7 @@ async function open(){
     }
     let saved;try{saved=JSON.parse(profileStorage.getItem(storageKey));}catch{}
     if(saved&&['name','contact','body'].every(field=>typeof saved[field]==='string')&&hasResumeContent(saved)){
-      populate(saved);savedText=JSON.stringify(value());status.textContent='Your saved edited version is ready.';
+      populate(saved);savedText=JSON.stringify(value());status.textContent = profileStorage.notice('Your saved edited version is ready.');
     }else if(file){
       const text=await extract(file);
       if(!text.trim())throw new Error('This resume has no selectable text. Paste your text below to create an editable version. Your original is still on My resume.');
@@ -53,10 +53,10 @@ async function open(){
   finally{ready=true;form.inert=false;render();}
 }
 form.addEventListener('submit',event=>event.preventDefault());
-form.addEventListener('input',()=>{render();status.textContent='Unsaved changes. Save your edited version before leaving.';});
+form.addEventListener('input',()=>{render();status.textContent = 'Unsaved changes. Save your edited version before leaving.';});
 document.querySelector('#save-edited').addEventListener('click',()=>{
   if(!hasResumeContent(value()))return;
-  try{const serialized=JSON.stringify(value());profileStorage.setItem(storageKey,serialized);if(profileStorage.getItem(storageKey)!==serialized)throw new Error();savedText=serialized;render();status.textContent='Edited version saved on this browser. Your original is unchanged.';}
+  try{const serialized=JSON.stringify(value());profileStorage.setItem(storageKey,serialized);if(profileStorage.getItem(storageKey)!==serialized)throw new Error();savedText=serialized;render();status.textContent = profileStorage.notice('Edited version saved on this browser. Your original is unchanged.');}
   catch{status.textContent='Could not save in this browser. Download your edited version to keep it.';}
 });
 function download(text,type,filename){const url=URL.createObjectURL(new Blob([text],{type}));const link=document.createElement('a');link.href=url;link.download=filename;document.body.append(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);status.textContent='Download requested. Check your browser downloads.';}

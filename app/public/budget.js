@@ -213,7 +213,7 @@ form.addEventListener('submit', event => {
       saved[field.name] = field.type === 'checkbox' ? field.checked : field.value;
     }
     profileStorage.setItem(storageKey, JSON.stringify(saved));
-    status.textContent = id ? 'Budget saved.' : 'Budget kept in this browser tab, including refreshes. Download a copy before closing the tab.';
+    status.textContent = profileStorage.notice(id ? 'Budget saved.' : 'Budget kept in this browser tab, including refreshes. Download a copy before closing the tab.');
   } catch {
     status.textContent = 'Budget calculated. This browser could not save it.';
   }

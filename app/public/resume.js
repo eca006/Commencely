@@ -101,14 +101,14 @@ function render(){
     button.textContent=alreadySaved?'Resume saved ✓':'Save resume on this browser';
   }
 }
-form.addEventListener('input',()=>{render();importStatus.textContent='Changes are not saved yet. Choose Save resume on this browser to keep them.';status.textContent='Unsaved changes. Download your resume or save the draft on this browser.';});
+form.addEventListener('input',()=>{render();importStatus.textContent='Changes are not saved yet. Choose Save resume on this browser to keep them.';status.textContent = 'Unsaved changes. Download your resume or save the draft on this browser.';});
 try {
   const saved=JSON.parse(profileStorage.getItem(key));
   if(saved && ['name','contact','body'].every(field=>typeof saved[field]==='string') && hasResumeContent(saved)){
     for(const field of ['name','contact','body']) form.elements[field].value=saved[field];
     savedDraftText=JSON.stringify(model());
     importStatus.textContent='Saved resume loaded. You do not need to upload it again. Edit below, or use Download to save a file to your computer.';
-    status.textContent='Loaded your saved draft from this browser. Changes are saved only when you choose Save draft.';
+    status.textContent = profileStorage.notice('Loaded your saved draft from this browser. Changes are saved only when you choose Save draft.');
   }else if(saved){
     importStatus.textContent='No saved resume text was found. Choose your original resume file again to restore it.';
     status.textContent='No resume text is available to download yet.';
@@ -122,7 +122,7 @@ function saveDraft(){
     profileStorage.setItem(key,serialized);
     if(profileStorage.getItem(key)!==serialized)throw new Error('Save could not be verified.');
     savedDraftText=serialized;
-    status.textContent=id?'Resume saved on this browser. Use Download below to save a file to your computer.':'Draft kept in this browser tab, including refreshes. Download a copy before closing the tab.';
+    status.textContent = profileStorage.notice(id?'Resume saved on this browser. Use Download below to save a file to your computer.':'Draft kept in this browser tab, including refreshes. Download a copy before closing the tab.');
     importStatus.textContent=id?'Resume saved ✓ You can leave and return in this same browser. To save a file to your computer, use Download below.':status.textContent;
     render();
   }catch{status.textContent='Could not save this draft. Download it to keep a copy.';importStatus.textContent=status.textContent;}

@@ -903,3 +903,5 @@ input, select, textarea { min-width: 0; max-width: 100%; box-sizing: border-box;
 @media (max-width: 560px) { .job-snippet { grid-template-columns: 1fr; } }
 
 .breadcrumbs a { text-decoration: underline; text-underline-offset: .15em; }
+
+.storage-warning { margin: 0; padding: 1rem max(1rem, calc((100vw - 1200px) / 2)); background: #fff0ce; color: #382700; border-bottom: 2px solid #8b6524; font: 500 1rem/1.5 system-ui, sans-serif; }
