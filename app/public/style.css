@@ -905,3 +905,8 @@ input, select, textarea { min-width: 0; max-width: 100%; box-sizing: border-box;
 .breadcrumbs a { text-decoration: underline; text-underline-offset: .15em; }
 
 .storage-warning { margin: 0; padding: 1rem max(1rem, calc((100vw - 1200px) / 2)); background: #fff0ce; color: #382700; border-bottom: 2px solid #8b6524; font: 500 1rem/1.5 system-ui, sans-serif; }
+
+.account-panel form p > label { display: block; margin-bottom: .35rem; }
+.account-panel input:not([type="checkbox"]) { display: block; width: 100%; min-height: 2.8rem; padding: .55rem .7rem; }
+.account-panel button { min-height: 44px; }
+.account-panel strong { overflow-wrap: anywhere; }

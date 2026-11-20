@@ -1,6 +1,7 @@
 import { authenticatorCode, authenticatorKey } from './totp.mjs';
 import { pbkdf2 } from '@noble/hashes/pbkdf2.js';
 import { sha256 } from '@noble/hashes/sha2.js';
+import { recoveryRoute, recoverySettings, sessionAccount } from './recovery.mjs';
 
 const challengeLifetime = 600;
 const lifetime = 7 * 86400;
@@ -42,13 +43,20 @@ function identifier(value) {
   return input.startsWith('+') && /^\d{8,15}$/.test(digits) ? '+' + digits : null;
 }
 
-export async function accountRoute(request, url, db, json, derive = passwordHash) {
+export async function accountRoute(request, url, db, json, derive = passwordHash, services = {}) {
   const action = url.pathname.split('/').at(-1);
   const token = request.headers.get('Cookie')?.match(/(?:^|;\s*)commencely_session=([a-f0-9]{64})(?:;|$)/)?.[1];
   const now = Math.floor(Date.now() / 1000);
+  if (action === 'recovery-options' && request.method === 'GET') {
+    return json(200, { emailEnabled: Boolean(services.mail?.enabled) });
+  }
   if (action === 'session' && request.method === 'GET') {
-    const id = token && await db.prepare('SELECT account FROM sessions WHERE token = ? AND expires > ? AND two_factor_verified = 1').bind(await digest(token), now).first('account');
-    return json(200, { id: id || null });
+    const account = await sessionAccount(db, token, now);
+    return json(200, { id: account?.id ?? null });
+  }
+  if (action === 'recovery-settings' && request.method === 'GET') {
+    const settings = await recoverySettings(db, token, now, services.mail);
+    return settings ? json(200, settings) : json(401, { error: 'Sign in to manage recovery settings.' });
   }
   if (request.method !== 'POST') return json(405, { error: 'Method not allowed.' });
   if (request.headers.get('Origin') !== url.origin || request.headers.get('Content-Type') !== 'application/json') {
@@ -60,7 +68,8 @@ export async function accountRoute(request, url, db, json, derive = passwordHash
     return json(200, {}, 'commencely_session=; Max-Age=0; ' + cookie);
   }
   const signup = action === 'sign-up';
-  if (!signup && action !== 'sign-in' && action !== 'verify' && action !== 'recover') return json(404, { error: 'Page not found.' });
+  const recoveryAction = ['recovery-codes', 'recovery-email-start', 'recovery-email-confirm', 'email-reset-request', 'email-reset'].includes(action);
+  if (!signup && action !== 'sign-in' && action !== 'verify' && action !== 'recover' && !recoveryAction) return json(404, { error: 'Page not found.' });
   let data;
   try {
     const body = await request.text();
@@ -69,7 +78,8 @@ export async function accountRoute(request, url, db, json, derive = passwordHash
   } catch {
     return json(400, { error: 'Invalid request.' });
   }
-  if (action === 'recover') return recoverAccount(data, db, json, now, derive);
+  if (recoveryAction) return recoveryRoute({ action, data, db, json, now, token, derive, services });
+  if (action === 'recover') return recoverAccount(data, db, json, now, derive, services);
   if (action === 'verify') return verifyChallenge(data, db, json, now, token, cookie);
 
   const login = identifier(data?.login);
@@ -78,7 +88,7 @@ export async function accountRoute(request, url, db, json, derive = passwordHash
     return json(400, { error: 'Enter a valid email or phone number and a password of 8–128 characters.' });
   }
   if (signup && password !== data.confirmation) return json(400, { error: 'Passwords don’t match.' });
-  const account = await db.prepare('SELECT id, salt, hash, totp_secret FROM accounts WHERE login = ?').bind(login).first();
+  const account = await db.prepare('SELECT id, salt, hash, totp_secret, security_version FROM accounts WHERE login = ?').bind(login).first();
   if (signup && account) return alreadyRegistered(json);
   const salt = account?.salt ?? random(16);
   const hash = await derive(password, salt);
@@ -90,9 +100,9 @@ export async function accountRoute(request, url, db, json, derive = passwordHash
   const secretBytes = account?.totp_secret ? null : crypto.getRandomValues(new Uint8Array(20));
   await db.batch([
     db.prepare('DELETE FROM account_challenges WHERE expires <= ?').bind(now),
-    db.prepare('INSERT INTO account_challenges (token, account, login, salt, hash, secret, expires) VALUES (?, ?, ?, ?, ?, ?, ?)')
+    db.prepare('INSERT INTO account_challenges (token, account, login, salt, hash, secret, expires, account_version) VALUES (?, ?, ?, ?, ?, ?, ?, ?)')
       .bind(await digest(challenge), account?.id ?? random(16), login, signup ? salt : null,
-        signup ? hash : null, secretBytes ? hex(secretBytes) : null, now + challengeLifetime)
+        signup ? hash : null, secretBytes ? hex(secretBytes) : null, now + challengeLifetime, account?.security_version ?? 0)
   ]);
   return json(202, { challenge, setupKey: secretBytes ? authenticatorKey(secretBytes) : null });
 }
@@ -118,9 +128,9 @@ async function verifyChallenge(data, db, json, now, oldToken, cookie) {
 
   const signup = challenge.hash !== null;
   const account = signup ? null : await db.prepare(
-    'SELECT totp_secret, totp_step, recovery_hashes FROM accounts WHERE id = ?'
+    'SELECT totp_secret, totp_step, recovery_hashes, security_version FROM accounts WHERE id = ?'
   ).bind(challenge.account).first();
-  if (!signup && (!account || Boolean(challenge.secret) === Boolean(account.totp_secret))) {
+  if (!signup && (!account || account.security_version !== challenge.account_version || Boolean(challenge.secret) === Boolean(account.totp_secret))) {
     return json(410, { error: 'Your account setup changed. Start sign-in again.' });
   }
   if (account) {
@@ -152,7 +162,9 @@ async function verifyChallenge(data, db, json, now, oldToken, cookie) {
   // A challenge can issue at most one session, even when requests overlap.
   const consumed = await db.prepare('DELETE FROM account_challenges WHERE token = ?').bind(challengeToken).run();
   if (!consumed.meta.changes) return json(410, { error: 'This verification request was already used. Start again.' });
-  const recoveryCodes = challenge.secret ? Array.from({ length: 10 }, () => random(10)) : null;
+  // A successful password + last-backup-code sign-in must not strand the user.
+  const recoveryCodes = challenge.secret || (!isAuthenticatorCode && recoveryHashes.length === 0) ?
+    Array.from({ length: 10 }, () => random(10)) : null;
   if (recoveryCodes) recoveryHashes = await Promise.all(recoveryCodes.map(digest));
   const recovery = JSON.stringify(recoveryHashes);
   let update;
@@ -160,14 +172,14 @@ async function verifyChallenge(data, db, json, now, oldToken, cookie) {
     update = db.prepare('INSERT INTO accounts (id, login, salt, hash, totp_secret, totp_step, recovery_hashes) VALUES (?, ?, ?, ?, ?, ?, ?) ON CONFLICT(login) DO NOTHING')
       .bind(challenge.account, challenge.login, challenge.salt, challenge.hash, challenge.secret, acceptedStep, recovery);
   } else if (challenge.secret) {
-    update = db.prepare('UPDATE accounts SET totp_secret = ?, totp_step = ?, recovery_hashes = ? WHERE id = ? AND totp_secret IS NULL')
-      .bind(challenge.secret, acceptedStep, recovery, challenge.account);
+    update = db.prepare('UPDATE accounts SET totp_secret = ?, totp_step = ?, recovery_hashes = ? WHERE id = ? AND totp_secret IS NULL AND security_version = ?')
+      .bind(challenge.secret, acceptedStep, recovery, challenge.account, challenge.account_version);
   } else if (isAuthenticatorCode) {
-    update = db.prepare('UPDATE accounts SET totp_step = ? WHERE id = ? AND totp_step < ?')
-      .bind(acceptedStep, challenge.account, acceptedStep);
+    update = db.prepare('UPDATE accounts SET totp_step = ? WHERE id = ? AND totp_step < ? AND security_version = ?')
+      .bind(acceptedStep, challenge.account, acceptedStep, challenge.account_version);
   } else {
-    update = db.prepare('UPDATE accounts SET recovery_hashes = ? WHERE id = ? AND recovery_hashes = ?')
-      .bind(recovery, challenge.account, account.recovery_hashes);
+    update = db.prepare('UPDATE accounts SET recovery_hashes = ? WHERE id = ? AND recovery_hashes = ? AND security_version = ?')
+      .bind(recovery, challenge.account, account.recovery_hashes, challenge.account_version);
   }
 
   if (!(await update.run()).meta.changes) {
@@ -177,21 +189,21 @@ async function verifyChallenge(data, db, json, now, oldToken, cookie) {
   const session = random(32);
   await db.batch([
     db.prepare('DELETE FROM sessions WHERE expires <= ? OR token = ?').bind(now, oldToken ? await digest(oldToken) : ''),
-    db.prepare('INSERT INTO sessions (token, account, expires, two_factor_verified) VALUES (?, ?, ?, 1)')
-      .bind(await digest(session), challenge.account, now + lifetime)
+    db.prepare('INSERT INTO sessions (token, account, expires, two_factor_verified, account_version) VALUES (?, ?, ?, 1, ?)')
+      .bind(await digest(session), challenge.account, now + lifetime, challenge.account_version)
   ]);
   return json(signup ? 201 : 200, { id: challenge.account, recoveryCodes },
     'commencely_session=' + session + '; Max-Age=' + lifetime + '; ' + cookie);
 }
 
-async function recoverAccount(data, db, json, now, derive) {
+async function recoverAccount(data, db, json, now, derive, services) {
   const login = identifier(data?.login);
   const code = typeof data?.code === 'string' ? data.code.trim().toLowerCase().replaceAll('-', '') : '';
   if (!login || !/^[a-f0-9]{20}$/.test(code) || typeof data.password !== 'string' ||
       data.password.length < 8 || data.password.length > 128 || data.password !== data.confirmation) {
     return json(400, { error: 'Enter your account, recovery code, and matching passwords of 8–128 characters.' });
   }
-  const account = await db.prepare('SELECT id, recovery_hashes FROM accounts WHERE login = ?').bind(login).first();
+  const account = await db.prepare('SELECT id, recovery_hashes, recovery_email, security_version FROM accounts WHERE login = ?').bind(login).first();
   const invalid = () => json(401, { error: 'The account or recovery code is incorrect or the code was already used.' });
   if (!account) return invalid();
   const window = Math.floor(now / 300);
@@ -202,14 +214,20 @@ async function recoverAccount(data, db, json, now, derive) {
   const hash = await digest(code);
   const codes = JSON.parse(account.recovery_hashes);
   if (!codes.includes(hash)) return invalid();
+  if (codes.length < 2) return json(400, { error: 'This is your last recovery code. Do not spend it on a password reset: you would still need another code or your authenticator to sign in. Use verified-email recovery with your authenticator, or sign in with your current password and this code to replace your recovery codes.' });
   const salt = random(16);
   const password = await derive(data.password, salt);
-  const updated = await db.prepare('UPDATE accounts SET salt = ?, hash = ?, recovery_hashes = ? WHERE id = ? AND recovery_hashes = ?')
-    .bind(salt, password, JSON.stringify(codes.filter(value => value !== hash)), account.id, account.recovery_hashes).run();
+  const updated = await db.prepare('UPDATE accounts SET salt = ?, hash = ?, recovery_hashes = ?, security_version = security_version + 1 WHERE id = ? AND recovery_hashes = ? AND security_version = ?')
+    .bind(salt, password, JSON.stringify(codes.filter(value => value !== hash)), account.id, account.recovery_hashes, account.security_version).run();
   if (!updated.meta.changes) return invalid();
   await db.batch([
-    db.prepare('DELETE FROM sessions WHERE account = ?').bind(account.id),
-    db.prepare('DELETE FROM account_challenges WHERE account = ?').bind(account.id)
+    db.prepare('DELETE FROM sessions WHERE account = ? AND account_version < ?').bind(account.id, account.security_version + 1),
+    db.prepare('DELETE FROM account_challenges WHERE account = ? AND account_version < ?').bind(account.id, account.security_version + 1),
+    db.prepare('DELETE FROM recovery_requests WHERE account = ? AND account_version < ?').bind(account.id, account.security_version + 1)
   ]);
+  if (services.mail?.enabled && account.recovery_email) services.mail.enqueue(services.mail.send({
+    to: account.recovery_email, subject: 'Commencely password changed',
+    text: 'Your password was reset using a recovery code. Existing sessions and recovery links were revoked. Two-factor authentication remains enabled.'
+  }));
   return json(200, {});
 }

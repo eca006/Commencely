@@ -11,6 +11,9 @@ Object.assign(files, {
   '/404': ['404.html', 'text/html'],
   '/404.js': ['404.js', 'text/javascript'],
   '/account-help': ['account-help.html', 'text/html'],
+  '/account-security': ['account-security.html', 'text/html'],
+  '/account-security.js': ['account-security.js', 'text/javascript'],
+  '/recovery-codes.js': ['recovery-codes.js', 'text/javascript'],
   '/recovery.js': ['recovery.js', 'text/javascript'],
   '/sign-in': ['account.html', 'text/html'],
   '/sign-up': ['account.html', 'text/html'],
@@ -70,9 +73,14 @@ http.createServer(async (req, res) => {
       res.writeHead(404, { 'Content-Type': 'text/html; charset=utf-8' });
       return res.end(await readFile(new URL('./public/404.html', import.meta.url)));
     }
-    res.writeHead(200, { 'Content-Type': file[1] + '; charset=utf-8' });
+    res.writeHead(200, {
+      'Content-Type': file[1] + '; charset=utf-8',
+      ...(['/account-help', '/account-security', '/sign-in', '/sign-up'].includes(url.pathname) ?
+        { 'Cache-Control': 'no-store', 'Referrer-Policy': 'no-referrer' } : {})
+    });
     res.end(await readFile(new URL('./public/' + file[0], import.meta.url)));
   } catch {
+    if (req.url.startsWith('/api/account/')) return json(res, 503, { error: 'Account service is temporarily unavailable. Please try again.' });
     json(res, 502, { error: 'Unable to load jobs right now. Please try again.' });
   }
 }).listen(Number(process.env.PORT || 3000), '127.0.0.1', () => console.log('Commencely: http://localhost:' + (process.env.PORT || 3000)));

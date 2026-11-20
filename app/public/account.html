@@ -14,6 +14,7 @@
 <main class="account-layout">
 <section class="account-panel" aria-labelledby="account-title">
 <h1 id="account-title">Account</h1>
+<p id="signup-recovery-warning" hidden>Save your recovery codes during setup. Without your authenticator or unused recovery codes, email alone cannot restore account access.</p>
 <form id="account-form" method="post" novalidate>
 <div id="account-fields">
 <p><label for="login">Email or phone number</label><input id="login" name="login" autocomplete="username" autocapitalize="none" maxlength="254" required></p>
@@ -30,12 +31,15 @@
 <section id="account-recovery" hidden>
 <h2>Save your recovery codes</h2>
 <p>Keep these codes somewhere safe. Each can replace your authenticator code once if you lose access to your app.</p>
-<ul id="recovery-code-list"></ul>
-<a href="/">I saved my codes. Continue to Commencely.</a>
+<ul id="recovery-code-list" data-code-list></ul>
+<button type="button" data-code-download>Download recovery codes</button>
+<p><label><input type="checkbox" data-code-ack> I saved these codes and understand the account-recovery limits.</label></p>
+<button type="button" data-code-continue="/" disabled>Continue to Commencely</button>
 </section>
 <p id="account-status" role="status">Loading account form…</p>
 <p><a id="account-alternate" href="/sign-up">Create an account</a></p>
 <p><a href="/account-help">Forgot password or lost authenticator access?</a></p>
+<p id="security-link" hidden><a href="/account-security">Manage recovery codes and email</a></p>
 <p class="account-slogan">You did the studying. We'll do the searching.</p>
 </section>
 </main>
