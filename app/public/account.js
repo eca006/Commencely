@@ -1,3 +1,4 @@
+import { displayRecoveryCodes } from './recovery-codes.js';
 const form = document.querySelector('#account-form');
 const signingUp = location.pathname === '/sign-up';
 const message = document.querySelector('#account-status');
@@ -10,6 +11,8 @@ const submit = form.querySelector('button');
 const session = await fetch('/api/account/session', { signal: AbortSignal.timeout(8000) })
   .then(response => response.json()).catch(() => ({}));
 const signedIn = Boolean(session.id);
+document.querySelector('#security-link').hidden = !signedIn;
+document.querySelector('#signup-recovery-warning').hidden = !signingUp || signedIn;
 document.querySelector('h1').textContent = signedIn ? 'Your account' : signingUp ? 'Create an account' : 'Sign in';
 document.title = document.querySelector('h1').textContent + ' | Commencely';
 accountFields.hidden = signedIn;
@@ -80,15 +83,7 @@ form.addEventListener('submit', async event => {
     if (data.recoveryCodes) {
       form.hidden = true;
       message.textContent = '';
-      const list = document.querySelector('#recovery-code-list');
-      for (const recoveryCode of data.recoveryCodes) {
-        const item = document.createElement('li');
-        const text = document.createElement('code');
-        text.textContent = recoveryCode.match(/.{5}/g).join('-');
-        item.append(text);
-        list.append(item);
-      }
-      document.querySelector('#account-recovery').hidden = false;
+      displayRecoveryCodes(document.querySelector('#account-recovery'), data.recoveryCodes);
       return;
     }
     location.assign(signedIn ? '/sign-in' : '/');

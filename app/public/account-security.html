@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Recovery settings | Commencely</title><link rel="stylesheet" href="/style.css"></head>
+<body class="app-shell account-page">
+<header class="account-header"><a class="account-wordmark" href="/">Commencely</a><a href="/sign-in">Your account</a></header>
+<main class="account-layout"><section class="account-panel" aria-labelledby="security-title">
+<h1 id="security-title">Protect your account</h1>
+<p id="security-status" role="status">Loading recovery settings…</p>
+<div id="security-settings" hidden>
+<p>Unused recovery codes: <strong id="remaining-codes"></strong>. Verified recovery email: <strong id="verified-email"></strong>.</p>
+<p>Without your authenticator or unused recovery codes, email alone cannot restore access. Keep codes somewhere private, separate from your password. An open session alone is not enough to change recovery settings.</p>
+<h2>Replace your recovery codes</h2>
+<p>This invalidates every old code and signs out all sessions, including this one. You will receive ten new codes to download before signing in again.</p>
+<form id="replace-codes-form">
+<p><label for="codes-password">Current password</label><input id="codes-password" name="password" type="password" autocomplete="current-password" required maxlength="128"></p>
+<p><label for="codes-factor">Fresh authenticator or unused recovery code</label><input id="codes-factor" name="code" autocomplete="one-time-code" autocapitalize="none" spellcheck="false" required maxlength="24"></p>
+<button type="submit">Replace recovery codes</button>
+</form>
+<h2>Add or change your recovery email</h2>
+<p id="email-availability">Checking email availability…</p>
+<form id="enroll-email-form" hidden>
+<p>You must prove account ownership now, then confirm the new address from your inbox within 15 minutes. Confirming the email signs out existing sessions. Your sign-in email or phone number does not change.</p>
+<p><label for="recovery-email">Recovery email address</label><input id="recovery-email" name="email" type="email" autocomplete="email" required maxlength="254"></p>
+<p><label for="email-password">Current password</label><input id="email-password" name="password" type="password" autocomplete="current-password" required maxlength="128"></p>
+<p><label for="email-factor">Fresh authenticator or unused recovery code</label><input id="email-factor" name="code" autocomplete="one-time-code" autocapitalize="none" spellcheck="false" required maxlength="24"></p>
+<button type="submit">Send confirmation email</button>
+</form>
+</div>
+<section id="replacement-codes" hidden aria-labelledby="replacement-title">
+<h2 id="replacement-title">Save your new recovery codes now</h2>
+<p>Old codes no longer work. You are signed out. These new codes are shown only here—download them before leaving.</p>
+<ul data-code-list></ul>
+<button type="button" data-code-download>Download recovery codes</button>
+<p><label><input type="checkbox" data-code-ack> I saved these codes and understand the account-recovery limits.</label></p>
+<button type="button" data-code-continue="/sign-in" disabled>Continue to sign in</button>
+</section>
+<p><a href="/account-help">Recovery help</a> · <a href="/sign-in">Sign in or manage your account</a></p>
+</section></main><script type="module" src="/account-security.js"></script>
+</body></html>

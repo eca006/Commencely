@@ -13,7 +13,7 @@ test('authenticator codes match RFC 6238', async () => {
 
 test('account access requires a fresh second factor and recovery codes are single use', async () => {
   const sqlite = new DatabaseSync(':memory:');
-  for (const migration of ['0000_accounts', '0001_two_factor']) {
+  for (const migration of ['0000_accounts', '0001_two_factor', '0002_recovery']) {
     sqlite.exec(readFileSync(new URL('./drizzle/' + migration + '.sql', import.meta.url), 'utf8'));
   }
   const db = {

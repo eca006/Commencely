@@ -30,6 +30,9 @@ await writeFile(new URL('assets.mjs', output), 'export const assets = Object.fro
 const worker = await read('sites/worker.mjs', 'utf8');
 await writeFile(new URL('index.js', output), worker.replace('../job-routes.mjs', './job-routes.mjs'));
 await copyFile(new URL('sites/totp.mjs', root), new URL('totp.mjs', output));
+for (const name of ['recovery', 'recovery-mail']) {
+  await copyFile(new URL('sites/' + name + '.mjs', root), new URL(name + '.mjs', output));
+}
 const accounts = await read('sites/accounts.mjs', 'utf8');
 await writeFile(new URL('accounts.mjs', output), accounts.replaceAll("'@noble/hashes/", "'./noble-hashes/"));
 const hashingModules = new URL('noble-hashes/', output);

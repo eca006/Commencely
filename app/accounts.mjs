@@ -3,6 +3,7 @@ import { scrypt } from 'node:crypto';
 import { promisify } from 'node:util';
 import { mkdirSync, readFileSync } from 'node:fs';
 import { accountRoute } from './sites/accounts.mjs';
+import { createRecoveryMail } from './sites/recovery-mail.mjs';
 
 const scryptAsync = promisify(scrypt);
 let database;
@@ -20,10 +21,11 @@ function localStore() {
         CREATE TABLE IF NOT EXISTS schema_migrations (name TEXT PRIMARY KEY);
         BEGIN IMMEDIATE;
       `);
-      const name = '0001_two_factor';
-      if (!db.prepare('SELECT name FROM schema_migrations WHERE name = ?').get(name)) {
-        db.exec(readFileSync(new URL('./drizzle/' + name + '.sql', import.meta.url), 'utf8'));
-        db.prepare('INSERT INTO schema_migrations VALUES (?)').run(name);
+      for (const name of ['0001_two_factor', '0002_recovery']) {
+        if (!db.prepare('SELECT name FROM schema_migrations WHERE name = ?').get(name)) {
+          db.exec(readFileSync(new URL('./drizzle/' + name + '.sql', import.meta.url), 'utf8'));
+          db.prepare('INSERT INTO schema_migrations VALUES (?)').run(name);
+        }
       }
       db.exec('COMMIT');
       database = db;
@@ -82,7 +84,8 @@ export async function accountRequest(req, res, path) {
   pending++;
   try {
     return await accountRoute(request, url, localStore(), send,
-      async (password, salt) => (await scryptAsync(password, salt, 64)).toString('hex'));
+      async (password, salt) => (await scryptAsync(password, salt, 64)).toString('hex'),
+      { mail: createRecoveryMail(process.env), clientAddress: req.socket.remoteAddress });
   } finally {
     pending--;
   }
