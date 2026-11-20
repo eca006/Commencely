@@ -21,6 +21,7 @@ Object.assign(files, {
   '/budget.js': ['budget.js', 'text/javascript'],
   '/business-majors.js': ['business-majors.js', 'text/javascript'],
   '/job-snippet.js': ['job-snippet.js', 'text/javascript'],
+  '/job-preferences.js': ['job-preferences.js', 'text/javascript'],
   '/employer-logos.js': ['employer-logos.js', 'text/javascript'],
   '/applications': ['applications.html', 'text/html'],
   '/applications.js': ['applications.js', 'text/javascript']

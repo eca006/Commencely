@@ -37,8 +37,10 @@ await mkdir(hashingModules, { recursive: true });
 for (const file of ['pbkdf2.js', 'sha2.js', 'hmac.js', 'utils.js', '_md.js', '_u64.js', 'LICENSE']) {
   await copyFile(new URL('node_modules/@noble/hashes/' + file, root), new URL(file, hashingModules));
 }
-for (const name of ['job-routes', 'jobs', 'careeronestop', 'search', 'employer-jobs', 'regional-employer-feeds', 'qualifications']) {
+for (const name of ['job-routes', 'jobs', 'careeronestop', 'search', 'employer-jobs', 'regional-employer-feeds', 'entry-employer-feeds', 'qualifications']) {
   const module = await read(name + '.mjs', 'utf8');
-  await writeFile(new URL(name + '.mjs', output), module.replaceAll('./public/business-majors.js', './business-majors.mjs'));
+  await writeFile(new URL(name + '.mjs', output), module.replaceAll('./public/business-majors.js', './business-majors.mjs')
+    .replaceAll('./public/job-preferences.js', './job-preferences.mjs'));
 }
 await copyFile(new URL('public/business-majors.js', root), new URL('business-majors.mjs', output));
+await copyFile(new URL('public/job-preferences.js', root), new URL('job-preferences.mjs', output));

@@ -29,6 +29,16 @@ Never commit `.env`, account databases, uploads, or credentials. Local account d
 
 ## Hosting and checks
 
+### Entry-level NWA job coverage
+
+The public employer search also discovers current listings from TQL, First Security Bank, First Western Bank, Generations Bank, Bank OZK, and the Northwest Arkansas job board (Getro). No additional account or email address is needed for these sources. Getro descriptions are republished copies, explicitly attributed with a link to that copy; application links still lead to the employer.
+
+Jobs must name a Northwest Arkansas city or county and Arkansas. Out-of-state jobs, expired structured postings, internal-only bank jobs, and TQL positions requiring relocation are excluded. Existing business-major and career-direction filters still apply. Frontline business roles with an unspecified minimum can appear as potential graduate matches, but never receive a confirmed zero-year label merely because they offer training or omit years.
+
+Zero-year matches appear first. Required/listed minimums of up to three years remain eligible, including ranges such as 3–5. Explicitly optional experience is distinguished from required experience, months are converted to fractions of a year, and company history, awards, or future training are not applicant minimums.
+
+Sources are cached for ten minutes. Regional searches cover six business job families and retrieve at most 24 full descriptions per refresh, prioritizing junior titles and mixing job families. The regional source has short timeouts and reports partial results when a page fails or a search is capped; this is not an exhaustive vacancy count. Employer rate limits and availability can change the results.
+
 `.openai/hosting.json` preserves the existing Site identity and database binding. `node sites/build.mjs` creates the Worker output. Use the Sites source workflow to test, commit, package and publish this output.
 
 Tests cover experience parsing, job normalization and relevance, résumé parsing and export, guest retention and account isolation, two-factor setup, one-use backup codes, and password recovery. Browser verification covers guest upload-to-editor handoff and refresh retention. Real-device and screen-reader testing remain separate checks.

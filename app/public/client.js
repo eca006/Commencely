@@ -1,5 +1,6 @@
 import { businessMajors, getBusinessMajor, matchesBusinessMajor } from './business-majors.js';
 import { jobSnippet } from './job-snippet.js';
+import { matchesExperienceFilter, experienceSummary, compareExperience, jobMatchKey } from './job-preferences.js';
 import { employerLogo } from './employer-logos.js';
 import { profileStorage, id } from './profile-storage.js';
 import { recommend, validAnswers } from './careers.js';
@@ -112,45 +113,6 @@ for (const [key, [label]] of Object.entries(businessMajors)) {
 const loadMoreJobs = document.querySelector('#load-more-jobs');
 let searchPages = null;
 
-const yearWords = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten'];
-
-function statedExperience({ experience }) {
-  return experience.filter(item => item.years && ['required', 'listed'].includes(item.status));
-}
-
-function minimumYears(years) {
-  const first = years.toLowerCase().match(/^\d+|^[a-z]+/)?.[0];
-  return first && /^\d+$/.test(first) ? Number(first) : yearWords.indexOf(first);
-}
-
-function matchesExperienceFilter(qualifications, filter) {
-  if (qualifications.graduateFit === 'outside') return false;
-  if (filter === 'zero') return qualifications.zeroExperience === true;
-  if (filter === 'stated') {
-    const minimums = statedExperience(qualifications).map(item => minimumYears(item.years));
-    return !minimums.some(years => years > 3) &&
-      (qualifications.noExperience || minimums.some(years => years >= 0 && years <= 3));
-  }
-  return qualifications.graduateFit === 'potential' || filter === 'broader';
-}
-
-function experienceSummary(qualifications) {
-  const stated = statedExperience(qualifications);
-  const primary = stated.find(item => item.status === 'required') ?? stated[0];
-  if (primary) return primary.status === 'required' ? `${primary.years} required` : `${primary.years} listed`;
-  if (qualifications.noExperience) return 'No experience required';
-  const preferred = qualifications.experience.find(item => item.status === 'preferred' && item.years);
-  if (preferred) return `${preferred.years} preferred`;
-  if (qualifications.experienceLevel) {
-    const level = qualifications.experienceLevel;
-    return `${level[0].toUpperCase()}${level.slice(1)} in job title`;
-  }
-  if (qualifications.entryLevel) return 'Entry level mentioned';
-  const ambiguous = qualifications.experience.find(item => item.years);
-  if (ambiguous) return `${ambiguous.years} mentioned · check posting`;
-  return 'Experience unspecified';
-}
-
 function renderJobSnippet(description) {
   const { overview, duties, requirements } = jobSnippet(description);
   const content = document.createElement('div');
@@ -188,12 +150,6 @@ function renderJobSnippet(description) {
   return content;
 }
 
-function jobMatchKey(job) {
-  const normalize = value => value.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
-  const city = job.location.match(/\b(Fayetteville|Springdale|Rogers|Bentonville|Lowell|Bella Vista)\b/i)?.[0];
-  if (!city || job.company === 'Company not listed' || job.title === 'Untitled job') return null;
-  return [job.title, job.company, city].map(normalize).join('|');
-}
 try {
   const saved = JSON.parse(profileStorage.getItem('commencely-search-v1'));
   if (saved && typeof saved.keywords === 'string' && typeof saved.location === 'string') {
@@ -281,14 +237,16 @@ form.addEventListener('submit', async event => {
     const filter = params.get('experienceFilter');
     const major = getBusinessMajor(params.get('major'));
     const majorJobs = combinedJobs.filter(job => matchesBusinessMajor(job, major));
-    const visibleJobs = majorJobs.filter(job => matchesExperienceFilter(job.qualifications, filter));
+    const visibleJobs = majorJobs.filter(job => matchesExperienceFilter(job.qualifications, filter)).sort(compareExperience);
     const resultText = `Showing ${visibleJobs.length} matching ${visibleJobs.length === 1 ? 'job' : 'jobs'}.`;
     const emptyMessage = visibleJobs.length ? '' : filter === 'zero'
       ? 'No jobs in this search confirmed a zero-year experience minimum.'
       : filter === 'stated'
       ? 'No postings had a clear minimum of three years or less. Try New graduate matches for a broader search.'
       : 'Try a broader keyword or change the experience filter.';
-    status.textContent = [resultText, emptyMessage].filter(Boolean).join(' ');
+    const zeroCount = visibleJobs.filter(job => job.qualifications.zeroExperience).length;
+    const priorityText = zeroCount ? `${zeroCount} explicitly ${zeroCount === 1 ? 'allows' : 'allow'} 0 years; shown first.` : '';
+    status.textContent = [resultText, priorityText, emptyMessage].filter(Boolean).join(' ');
     sourceDetails.hidden = false;
     sourceStatus.textContent = [
       `${majorJobs.length} business listings found before the experience filter.`,
@@ -325,10 +283,18 @@ form.addEventListener('submit', async event => {
       employer.append(name);
       const source = document.createElement('p');
       source.textContent = job.descriptionKind === 'full'
-        ? `Full employer description · ${job.source} · Retrieved ${new Date(job.fetchedAt).toLocaleString()}`
+        ? `${job.sourceUrl ? 'Republished full description' : 'Full employer description'} · ${job.source} · Retrieved ${new Date(job.fetchedAt).toLocaleString()}`
         : `${job.source || 'Adzuna'} · Partial description`;
       employer.className = 'job-employer';
       source.className = 'job-source';
+      if (job.sourceUrl?.startsWith('https://')) {
+        const copy = document.createElement('a');
+        copy.href = job.sourceUrl;
+        copy.target = '_blank';
+        copy.rel = 'noopener noreferrer';
+        copy.textContent = 'Read job-board copy';
+        source.append(' · ', copy);
+      }
       card.append(employer, title, experience, renderJobSnippet(job.description), source);
 
       const details = document.createElement('details');
