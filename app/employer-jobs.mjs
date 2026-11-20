@@ -1,6 +1,7 @@
 import { regionalBoards, loadRegionalBoard, localCity as local } from './regional-employer-feeds.mjs';
 import { qualificationEvidence } from './qualifications.mjs';
 import { filterBusinessJobs, filterDirection } from './search.mjs';
+import { entryBoards, loadEntryBoard } from './entry-employer-feeds.mjs';
 
 const boards = [
   { board: 'vmlenterprisesolutions', company: 'VML/WPP Enterprise Solutions' },
@@ -30,7 +31,8 @@ const boards = [
   { board: 'halter', company: 'Halter', provider: 'Ashby' },
   { board: 'coty', company: 'Coty', provider: 'Career site', origin: 'https://careers.coty.com' },
   { board: 'hershey', company: 'The Hershey Company', provider: 'Career site', origin: 'https://careers.thehersheycompany.com' },
-  ...regionalBoards
+  ...regionalBoards,
+  ...entryBoards
 ];
 export function plainText(html = '') {
   let text = String(html);
@@ -67,9 +69,13 @@ export function employerResults(data, {direction = '', keywords = '', location =
     if (!description) return [];
     let link = null;
     try {const url = new URL(job.absolute_url); if(url.protocol === 'https:') link=url.href;} catch {}
-    return {id:`${provider.toLowerCase()}:${board}:${job.id}`, title:job.title, company, location:job.location.name,
-      description, link, source:provider === 'Career site' ? `${company} Careers` : `Employer via ${provider}`, descriptionKind:'full', fetchedAt,
-      qualifications:qualificationEvidence(job.title,description,{full:true})};
+    let sourceUrl = null;
+    try {const url = new URL(job.sourceUrl); if(url.protocol === 'https:') sourceUrl=url.href;} catch {}
+    const qualifications = qualificationEvidence(job.title,description,{full:true});
+    if (sourceUrl) qualifications.notice = 'Experience wording extracted from a full description republished by the Northwest Arkansas job board. Confirm current requirements with the employer.';
+    return {id:`${provider.toLowerCase()}:${board}:${job.id}`, title:job.title, company:job.company || company, location:job.location.name,
+      description, link, source:job.source || (provider === 'Career site' ? `${company} Careers` : `Employer via ${provider}`),
+      ...(sourceUrl ? {sourceUrl} : {}), descriptionKind:'full', fetchedAt, qualifications};
   });
 }
 const cache = new Map();
@@ -140,7 +146,7 @@ async function loadBoard(config) {
   const saved = cache.get(key);
   if (saved && Date.now() - saved.time <= 10 * 60 * 1000) return saved;
 
-  const regional = loadRegionalBoard(config);
+  const regional = loadEntryBoard(config) || loadRegionalBoard(config);
   if (regional) {
     const entry = { data: await regional, time: Date.now(), fetchedAt: new Date().toISOString() };
     cache.set(key, entry);

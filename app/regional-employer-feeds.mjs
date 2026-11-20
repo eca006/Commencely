@@ -1,7 +1,7 @@
 import { filterBusinessJobs } from './search.mjs';
 
-export const localCity = /\b(?:Fayetteville|Springdale|Rogers|Bentonville|Lowell|Bella Vista|Centerton|Cave Springs|Benton County|Washington County|Siloam Springs|Farmington|Tontitown|Johnson|Pea Ridge|Gravette|Gentry|Prairie Grove|Elm Springs)\b/i;
-export const arkansas = /\b(?:AR|Arkansas)\b/i;
+import { localCity, arkansas } from './public/job-preferences.js';
+export { localCity, arkansas };
 
 export const regionalBoards = [
   { board: 'jbhunt', company: 'J.B. Hunt', provider: 'Workday', origin: 'https://jbhunt.wd501.myworkdayjobs.com', site: 'Careers' },
